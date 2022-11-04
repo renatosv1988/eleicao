@@ -2,6 +2,7 @@
 
 library(openxlsx)
 library(data.table)
+library(httr)
 
 
 
@@ -92,9 +93,8 @@ dir_munic_2020 <- './data_raw/munic'
 dir.create(dir_munic_2020)
 
 # download data
-download.file("https://ftp.ibge.gov.br/Perfil_Municipios/2020/Base_de_Dados/Base_MUNIC_2020.xlsx",
-              destfile = paste0(dir_munic_2020,"/Base_MUNIC_2020.xlsx"))
-
+httr::GET(url = "https://ftp.ibge.gov.br/Perfil_Municipios/2020/Base_de_Dados/Base_MUNIC_2020.xlsx",
+          httr::write_disk(paste0(dir_munic_2020,"/Base_MUNIC_2020.xlsx")))
 
 # read data
 munic <- openxlsx::read.xlsx(xlsxFile = './data_raw/munic/Base_MUNIC_2020.xlsx',
