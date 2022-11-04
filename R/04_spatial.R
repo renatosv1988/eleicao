@@ -8,7 +8,10 @@ library(geodist)
 library(pbapply)
 library(furrr)
 library(future)
+library(geobr)
+library(geosphere)
 
+options(scipen = 999)
 
 
 # distance to closest electoral section
@@ -200,3 +203,36 @@ fwrite(df3, './data/electoral_sections_spatial.csv')
   
   
   
+# calculate distance to city center --------------------------------------------------
+
+ # get data of city centers
+  city_centers_sf <- geobr::read_municipal_seat(year = 2010)
+  city_centers_df <- sfheaders::sf_to_df(city_centers_sf, fill = TRUE)
+  
+  # zones data
+  df3 <- fread('./data/electoral_sections_spatial.csv')
+
+  # correspondence table of municipality codes
+  rosetta <-  fread('./data_raw/br_bd_diretorios_brasil_municipio.csv', encoding = "UTF-8")
+  head(rosetta)
+
+
+  # bring IBGE code_muni
+  df3[rosetta, on = c('CD_MUNICIPIO'='id_municipio_tse'), code_muni := i.id_municipio]
+  head(df3)
+  
+  # bring sede muni coordinate
+  df3[city_centers_df, on = 'code_muni', c('x_sede', 'y_sede') := list(i.x, i.y)]
+  head(df3)
+  
+  # calculate distances
+  df3[ , dist_sede := geosphere::distGeo(matrix(c(x, y), ncol= 2), 
+                                  matrix(c(x_sede, y_sede), ncol = 2))]
+  
+
+head(df3)
+
+# save output --------------------------------------------------
+
+fwrite(df3, './data/electoral_sections_spatial.csv')
+
