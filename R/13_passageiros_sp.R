@@ -35,4 +35,5 @@ ggplot() +
  coord_cartesian(ylim=c(0,3)) +
  geom_vline(xintercept = as.Date("2022-10-02"), linetype=3, alpha = 0.5) +
  scale_y_continuous(labels=comma) +
+ scale_x_date(breaks = my_dates, date_labels = "%d-%b") +
  labs(x = "Date", y="passengers (million)")
