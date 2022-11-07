@@ -37,3 +37,4 @@ ggplot() +
  scale_y_continuous(labels=comma) +
  scale_x_date(breaks = my_dates, date_labels = "%d-%b") +
  labs(x = "Date", y="passengers (million)")
+ggsave("figures/passageiros_sp.png", w=5,h=4)
