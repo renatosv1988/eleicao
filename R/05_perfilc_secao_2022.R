@@ -40,3 +40,4 @@ for(i in 1:27){#i<-1
 BR <- do.call(rbind, AG)
 
 fwrite(BR, './data/secoes/secoes_perfil_2022.csv')
+

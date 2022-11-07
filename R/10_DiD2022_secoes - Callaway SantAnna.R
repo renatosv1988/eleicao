@@ -29,6 +29,8 @@ cs1 <- att_gt(yname = "comparecimento_2022",
              xformla = ~1,
              data = BD)
 summary(cs1)
+ggdid(cs1)
+
 
 # SE cluster por municipio
 cs2 <- att_gt(yname = "comparecimento_2022",
@@ -39,6 +41,7 @@ cs2 <- att_gt(yname = "comparecimento_2022",
               clustervars = "CD_MUNICIPIO",
               data = BD)
 summary(cs2)
+ggdid(cs2)
 
 # incluir variáveis municipais invariantes como X em xformula  !!!!!!!!!!!! ERRO 
 cs3 <- att_gt(yname = "comparecimento_2022",
