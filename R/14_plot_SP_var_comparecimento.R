@@ -9,6 +9,8 @@ ZZ <- fread("data_raw/zonas/eleitorado_local_votacao_2022.csv")
 # add lat lon
 ZZ[,id_secao:= paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 ZZ <- ZZ[!duplicated(ZZ$id_secao), c("id_secao","NR_LATITUDE","NR_LONGITUDE")]
+ZZX <- ZZ[ZZ$NR_LATITUDE==-1,] 
+
 BD<- merge(BD, ZZ, by="id_secao", all.x = T)
 
 
