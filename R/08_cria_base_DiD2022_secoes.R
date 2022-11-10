@@ -179,9 +179,3 @@ eleicao_2022 <- eleicao_2022[, ..my_var]
 
 fwrite(eleicao_2022, "../../data/base_DiD2022_secoes.csv")
 
-
-ggplot() +
- geom_density(aes(votos_lula), eleicao_2022[eleicao_2022$NR_TURNO==2], color="firebrick") +
- geom_density(aes(votos_jair), eleicao_2022[eleicao_2022$NR_TURNO==2], color="forestgreen") +
- theme_classic() +
- labs(x="votos por seção", y = "densidade")
