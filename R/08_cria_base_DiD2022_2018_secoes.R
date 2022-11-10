@@ -10,7 +10,7 @@ library(basedosdados)
 eleicao_2022 <- fread('../../data/secoes/secoes_2022.csv')
 eleicao_2018 <- fread('../../data/secoes/secoes_2018.csv')
 passe_livre <- fread('../../data/passe_livre/passe_livre_resumo.csv')
-# espacial <- fread('../../data/spatial/electoral_sections_spatial.csv')
+espacial <- fread('../../data/spatial/electoral_sections_spatial.csv')
 munic <- fread('../../data/munic/munic_dummy_pt.csv')
 corr_ibge_tse <- fread("../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv", encoding = "UTF-8")
 pib <- fread("../../data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8")
@@ -31,7 +31,7 @@ eleicao[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 
 # MERGE spatial info --------------------------------------------------
 espacial[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
-espacial <- espacial[,c("closest_dist_any", "closest_dist", "num_0500",
+espacial <- espacial[,c("dist_sede","closest_dist_any", "closest_dist", "num_0500",
                         "num_1000", "num_3000","num_5000","num_10000",
                         "id_secao")]
 eleicao <- merge(eleicao, espacial, by="id_secao", all.x = T)
@@ -68,6 +68,9 @@ summary(eleicao$educacao_1)
 #>   0.000   0.291   0.417   0.421   0.551   1.000   15360 
 # pq tanto missing?? 66666666666
 
+# muitos erros no merge com 2018
+summary(subset(eleicao, ANO_ELEICAO==2018)$educacao_1)
+summary(subset(eleicao, ANO_ELEICAO==2022)$educacao_1)
 
 
 # MERGE PASSE LIVRE ------------------------------------------------------------
@@ -122,7 +125,7 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
             "idade_16_17","idade_18_24","idade_60M",
             "comparecimento","abstencao",
             
-            "closest_dist_any", "closest_dist",
+            "dist_sede", "closest_dist_any", "closest_dist",
             "num_0500", "num_1000","num_3000",
             "num_5000","num_10000",
             
@@ -130,4 +133,4 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
 
 eleicao <- eleicao[, ..my_var]
 
-fwrite(eleicao, "data/base_DiD2022_2018_secoes.csv")
+fwrite(eleicao, "../../data/base_DiD2022_2018_secoes.csv")

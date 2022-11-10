@@ -8,7 +8,7 @@ library(basedosdados)
 
 #cidades <- read_municipal_seat()
 passe_livre <- fread('../../data/passe_livre/passe_livre_resumo.csv')
-# espacial <- fread('../../data/spatial/electoral_sections_spatial.csv')
+espacial <- fread('../../data/spatial/electoral_sections_spatial.csv')
 munic <- fread('../../data/munic/munic_dummy_pt.csv')
 corr_ibge_tse <- fread("../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv", encoding = "UTF-8")
 pib <- fread("../../data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8")
@@ -20,7 +20,7 @@ eleicao_2022[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 
 # MERGE spatial info --------------------------------------------------
 espacial[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
-espacial <- espacial[,c("closest_dist_any", "closest_dist", "num_0500",
+espacial <- espacial[,c("dist_sede", "closest_dist_any", "closest_dist", "num_0500",
                         "num_1000", "num_3000","num_5000","num_10000",
                         "id_secao")]
 eleicao_2022 <- merge(eleicao_2022, espacial, by="id_secao", all.x = T)
@@ -49,9 +49,7 @@ summary(eleicao_2022$educacao_1)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
 #>  0.0000  0.2887  0.4150  0.4189  0.5494  1.0000     672
 
-a <- eleicao_2022[is.na(educacao_1)]
 
-subset(perfil, id_secao %in% a$id_secao)
 
 # MERGE PASSE LIVRE ------------------------------------------------------------
 
@@ -104,7 +102,7 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
             "idade_16_17","idade_18_24","idade_60M",
             "comparecimento_2022","abstencao_2022",
             
-            "closest_dist_any", "closest_dist",
+            "dist_sede", "closest_dist_any", "closest_dist",
             "num_0500", "num_1000","num_3000",
             "num_5000","num_10000",
             
