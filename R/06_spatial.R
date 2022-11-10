@@ -70,9 +70,20 @@ df_secoes[, number_of_sections := length(unique(NR_SECAO)), by= .(SG_UF, CD_MUNI
 # df_secoes2 <- subset(df_secoes, CD_MUNICIPIO == 93360)
 
 
-#### Fix problematic coordinates
+#### Fix problematic coordinates ------------------------------------------------
 geocode <- fread('../../data_raw/geolocal_11out.csv')
 head(geocode)
+
+#' tse_ original
+#' comp_tse (meio inutil em 2022)  pode ignorar
+#' inep_ (fuzzy mathcing en nonme da secao e nome do censo escolar)
+#' google_ geocode do api do google do endereco da secao
+#' local_ usando uma base de dados local
+#' place_ geocode do api do google nome da secao (place name)
+#' google_aprox_ google apli com baixa precisao 
+#' ibge_approx_ centroide da faces de quadra
+
+
 
 summary(geocode$tse_lat)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
@@ -272,6 +283,8 @@ df2 <- furrr::future_map(.x = 1:nrow(sf),
 
 head(df2)
 tictoc::toc()
+#> 51357.86 sec elapsed
+
 
 # bring back the info on electoral sections id
 sf$i <- 1:nrow(sf)
@@ -282,12 +295,12 @@ head(df3)
 
 summary(df3$closest_dist_any)
 summary(df3$closest_dist)
-#>  Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#>     0     274     592  870830    9446 3702760 
+#> Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#>    0     215     436    1268     816 5429502 
 
 # save output --------------------------------------------------
-
-fwrite(df3, './data/electoral_sections_spatial.csv')
+dir.create('../../data/spatial')
+fwrite(df3, '../../data/spatial/electoral_sections_spatial.csv')
 
 
 
@@ -298,10 +311,10 @@ city_centers_sf <- geobr::read_municipal_seat(year = 2010)
 city_centers_df <- sfheaders::sf_to_df(city_centers_sf, fill = TRUE)
 
 # zones data
-df3 <- fread('./data/electoral_sections_spatial.csv')
+df3 <- fread('../../data/spatial/electoral_sections_spatial.csv')
 
 # correspondence table of municipality codes
-rosetta <-  fread('./data_raw/br_bd_diretorios_brasil_municipio.csv', encoding = "UTF-8")
+rosetta <-  fread('../../data_raw/br_bd_diretorios_brasil_municipio.csv', encoding = "UTF-8")
 head(rosetta)
 
 
@@ -313,6 +326,9 @@ head(df3)
 df3[city_centers_df, on = 'code_muni', c('x_sede', 'y_sede') := list(i.x, i.y)]
 head(df3)
 
+summary(df3$x)
+summary(df3$x_sede)
+
 # calculate distances
 df3[ , dist_sede := geosphere::distGeo(matrix(c(x, y), ncol= 2), 
                                        matrix(c(x_sede, y_sede), ncol = 2))]
@@ -322,26 +338,28 @@ head(df3)
 
 summary(df3$dist_sede)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-#>       3    1360    5654 1197931   35461 7907570     170 
+#>       3     885    2779    6814    8298 6277098     114 
 
 
 # save output --------------------------------------------------
 
-fwrite(df3, './data/electoral_sections_spatial.csv')
-
-17544 epedido
+fwrite(df3, '../../data/spatial/electoral_sections_spatial.csv')
 
 
-
-#' tse_ original
-#' comp_tse (meio inutil em 2022)  pode ignorar
-#' inep_ (fuzzy mathcing en nonme da secao e nome do censo escolar)
-#' google_ geocode do api do google do endereco da secao
-#' local_ usando uma base de dados local
-#' place_ geocode do api do google nome da secao (place name)
-#' google_aprox_ google apli com baixa precisao 
-#' ibge_approx_ centroide da faces de quadra
+hist(df3$closest_dist)
+hist(df3$dist_sede)
+hist(df3$num_0500)
+hist(df3$num_1000)
+hist(df3$num_3000)
+hist(df3$num_5000)
+hist(df3$num_10000)
 
 
-
+summary(df3$closest_dist)
+summary(df3$dist_sede)
+summary(df3$num_0500)
+summary(df3$num_1000)
+summary(df3$num_3000)
+summary(df3$num_5000)
+summary(df3$num_10000)
 
