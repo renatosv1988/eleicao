@@ -7,17 +7,18 @@ library(basedosdados)
 
 
 #cidades <- read_municipal_seat()
-eleicao_2022 <- fread('./data/secoes/secoes_2022.csv')
-eleicao_2018 <- fread('./data/secoes/secoes_2018.csv')
-passe_livre <- fread('data/passe_livre/passe_livre_resumo.csv')
-espacial <- fread('./data/spatial/electoral_sections_spatial.csv')
-munic <- fread('./data/munic/munic_dummy_pt.csv')
-corr_ibge_tse <- fread("./data_raw/tse_ibge/correspondencia_IBGE_TSE.csv", encoding = "UTF-8")
-pib <- fread("./data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8")
-perfil <- fread('./data/secoes/secoes_perfil_2022.csv')
+eleicao_2022 <- fread('../../data/secoes/secoes_2022.csv')
+eleicao_2018 <- fread('../../data/secoes/secoes_2018.csv')
+passe_livre <- fread('../../data/passe_livre/passe_livre_resumo.csv')
+# espacial <- fread('../../data/spatial/electoral_sections_spatial.csv')
+munic <- fread('../../data/munic/munic_dummy_pt.csv')
+corr_ibge_tse <- fread("../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv", encoding = "UTF-8")
+pib <- fread("../../data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8")
+perfil <- fread('../../data/secoes/secoes_perfil_2022.csv')
 
 # juntar 2018 e 2022
 eleicao_2022 <- eleicao_2022[,-c("NM_LOCAL_VOTACAO","DS_LOCAL_VOTACAO_ENDERECO")]
+
 setnames(eleicao_2022,
          old = c('comparecimento_2022','abstencao_2022'),
          new = c('comparecimento', 'abstencao'))
@@ -26,13 +27,16 @@ setnames(eleicao_2018,
          new = c('comparecimento', 'abstencao'))
 eleicao <- rbind(eleicao_2018, eleicao_2022)
 
-# MERGE INFORMAÇÕES ESPACIAIS --------------------------------------------------
 eleicao[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
+
+# MERGE spatial info --------------------------------------------------
 espacial[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 espacial <- espacial[,c("closest_dist_any", "closest_dist", "num_0500",
                         "num_1000", "num_3000","num_5000","num_10000",
                         "id_secao")]
 eleicao <- merge(eleicao, espacial, by="id_secao", all.x = T)
+
+
 
 # MERGE MUNIC ------------------------------------------------------------------
 corr_ibge_tse <- corr_ibge_tse[,c("codigo_tse", "codigo_ibge")]
@@ -41,18 +45,33 @@ munic <- merge(munic, corr_ibge_tse, by="code_muni", all.x = T)
 eleicao <- merge(eleicao, munic[,c("CD_MUNICIPIO", "dummy_pt", "code_muni")],
                       by="CD_MUNICIPIO", all.x = T)
 
+
+
 # MERGE perfil -----------------------------------------------------------------
-perfil$mulheres <- perfil$mulher/perfil$qt_perfil
-perfil$educacao_1 <- perfil$educ_prim/perfil$qt_perfil
-perfil$idade_16_17 <- perfil$idade_16_17/perfil$qt_perfil
-perfil$idade_18_24 <- perfil$idade_18_24/perfil$qt_perfil
-perfil$idade_60M <- perfil$idade_60M/perfil$qt_perfil
+perfil[, mulheres :=  mulher / qt_perfil ]
+perfil[, educacao_1 :=  educ_prim / qt_perfil ]
+perfil[, idade_16_17 :=  idade_16_17 / qt_perfil ]
+perfil[, idade_18_24 :=  idade_18_24 / qt_perfil ]
+perfil[, idade_60M :=  idade_60M / qt_perfil ]
+
+summary(perfil$educacao_1)
+#>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#> 0.0000  0.2899  0.4179  0.4215  0.5534  1.0000 
 
 eleicao <- merge(eleicao, perfil[,c("id_secao","mulheres","educacao_1",
                                               "idade_16_17","idade_18_24","idade_60M")],
                       by="id_secao", all.x = T)
 
+
+summary(eleicao$educacao_1)
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#>   0.000   0.291   0.417   0.421   0.551   1.000   15360 
+# pq tanto missing?? 66666666666
+
+
+
 # MERGE PASSE LIVRE ------------------------------------------------------------
+
 # separa bases por ano e turno
 t1o <- subset(eleicao, NR_TURNO==1 & ANO_ELEICAO==2018)
 t2o <- subset(eleicao, NR_TURNO==2 & ANO_ELEICAO==2018)
@@ -63,7 +82,8 @@ passe_livre_t1 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t1")]
 colnames(passe_livre_t1) <-c("CD_MUNICIPIO", "passe_livre") 
 passe_livre_t2 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t2")]
 colnames(passe_livre_t2) <-c("CD_MUNICIPIO", "passe_livre") 
-# cria variável de tempo calendário
+
+# cria variavel de tempo calendario
 t1o$t <- -1
 t2o$t <- 0
 t1$t <- 1

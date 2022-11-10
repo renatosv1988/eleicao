@@ -33,7 +33,11 @@ statebr[,name_state := toupper_noaccent(name_state)]
 # static google url
 link <- "https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv"
 google <- data.table::fread(input = link, encoding = "UTF-8")
+
+summary(google$date)
+
 google <- google[country_region %in% "Brazil",]
+summary(google$date)
 google <- google[date < as.Date("2022-12-31"),]
 
 # save to dara-raw

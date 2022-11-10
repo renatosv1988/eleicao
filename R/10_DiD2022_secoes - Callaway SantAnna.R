@@ -3,7 +3,7 @@ library(fixest)
 library(data.table)
 
 # ler base de eleições
-BD <- fread("data/base_DiD2022_secoes.csv")
+BD <- fread("./data/base_DiD2022_secoes.csv")
 
 # excluir seções de cidades sem sistema de ônibus
 BD <- subset(BD, dummy_pt==1)

@@ -11,7 +11,8 @@ library(httr)
 #' https://dadosabertos.tse.jus.br/dataset/eleitorado-2022
 
 # create dir
-dir_eleitorado <- './data_raw/eleitorado'
+dir.create('../../data_raw')
+dir_eleitorado <- '../../data_raw/eleitorado'
 dir.create(dir_eleitorado)
 
 # download data
@@ -30,7 +31,7 @@ unzip(paste0(dir_eleitorado, "/eleitorado_2018.zip"), exdir = dir_eleitorado)
 #' https://dadosabertos.tse.jus.br/dataset/eleitorado-2022
 
 # create dir
-dir_eleitorado <- './data_raw/eleitorado_secao'
+dir_eleitorado <- '../../data_raw/eleitorado_secao'
 dir.create(dir_eleitorado)
 
 # download data
@@ -54,7 +55,7 @@ unzip(paste0(dir_eleitorado, paste0("/eleitorado_",my_uf[i],"_2022.zip")), exdir
 #' https://dadosabertos.tse.jus.br/dataset/eleitorado-2022
 
 # create dir
-dir_zonas <- './data_raw/zonas'
+dir_zonas <- '../../data_raw/zonas'
 dir.create(dir_zonas)
 
 # download data
@@ -74,7 +75,7 @@ unzip(paste0(dir_zonas,"/zonas_2018.zip"), exdir = dir_zonas)
 #' https://dadosabertos.tse.jus.br/dataset/resultados-2022
 
 # create dir
-dir_votacao <- './data_raw/votacao'
+dir_votacao <- '../../data_raw/votacao'
 dir.create(dir_votacao)
 
 # download data
@@ -94,7 +95,7 @@ unzip(paste0(dir_votacao,"/votacao_2018.zip"), exdir = dir_votacao)
 #' https://dadosabertos.tse.jus.br/dataset/resultados-2022
 
 # create dir
-dir_secoes <- './data_raw/secoes'
+dir_secoes <- '../../data_raw/secoes'
 dir.create(dir_secoes)
 
 # download data
@@ -110,11 +111,35 @@ unzip(paste0(dir_secoes, "/secoes_2018.zip"), exdir = dir_secoes)
 
 
 
+
+
+#### google mobility --------------------------------------------------
+#' https://www.google.com/covid19/mobility/
+
+# create dir
+dir_google <- '../../data_raw/google'
+dir.create(dir_google)
+
+# download data
+download.file("https://www.gstatic.com/covid19/mobility/Region_Mobility_Report_CSVs.zip",
+              destfile = paste0(dir_google, "/google_mobility.zip"))
+
+# httr::GET(url="https://www.gstatic.com/covid19/mobility/Region_Mobility_Report_CSVs.zip",
+#           httr::write_disk( paste0(dir_google, "/google_mobility.zip"), overwrite = T))
+
+          
+# unzip data to local dir
+unzip(paste0(dir_google, "/google_mobility.zip"), exdir = dir_google,
+      files = '2020_BR_Region_Mobility_Report.csv')
+
+
+
+
 #### MUNIC data --------------------------------------------------
 #' https://www.ibge.gov.br/estatisticas/sociais/saude/10586-pesquisa-de-informacoes-basicas-municipais.html?=&t=downloads
 
 # create dir
-dir_munic_2020 <- './data_raw/munic'
+dir_munic_2020 <- '../../data_raw/munic'
 dir.create(dir_munic_2020)
 
 # download data
@@ -125,7 +150,7 @@ download.file("https://ftp.ibge.gov.br/Perfil_Municipios/2020/Base_de_Dados/Base
 #          httr::write_disk(paste0(dir_munic_2020,"/Base_MUNIC_2020.xlsx")))
 
 # read data
-munic <- openxlsx::read.xlsx(xlsxFile = './data_raw/munic/Base_MUNIC_2020.xlsx',
+munic <- openxlsx::read.xlsx(xlsxFile = '../../data_raw/munic/Base_MUNIC_2020.xlsx',
                          sheet = 'Transporte')
 
 
@@ -140,13 +165,14 @@ munic <- munic[, .(CodMun, UF, Cod.UF, Mun, dummy_pt)]
 setnames(munic, c('code_muni', 'UF', 'code_state', 'name_muni', 'dummy_pt'))
 
 # save
-dir_munic <- './data/munic'
+dir.create('./data')
+dir_munic <- '../../data/munic'
 dir.create(dir_munic)
-fwrite(munic, './data/munic/munic_dummy_pt.csv')
+fwrite(munic, '../../data/munic/munic_dummy_pt.csv')
 
 
 #### correspondencia IBGE TSE MUNICIPIOS ---------------------------------------
-dir_tse_ibge <- './data_raw/tse_ibge'
+dir_tse_ibge <- '../../data_raw/tse_ibge'
 dir.create(dir_tse_ibge)
 download.file(url = "https://raw.githubusercontent.com/betafcc/Municipios-Brasileiros-TSE/master/municipios_brasileiros_tse.csv",
-              destfile="./data_raw/tse_ibge/correspondencia_IBGE_TSE.csv")
+              destfile="../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv")

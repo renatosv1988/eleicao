@@ -7,16 +7,18 @@ library(basedosdados)
 
 
 #cidades <- read_municipal_seat()
-eleicao_2022 <- fread('./data/secoes/secoes_2022.csv')
-passe_livre <- fread('data/passe_livre/passe_livre_resumo.csv')
-espacial <- fread('./data/spatial/electoral_sections_spatial.csv')
-munic <- fread('./data/munic/munic_dummy_pt.csv')
-corr_ibge_tse <- fread("./data_raw/tse_ibge/correspondencia_IBGE_TSE.csv", encoding = "UTF-8")
-pib <- fread("./data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8")
-perfil <- fread('./data/secoes/secoes_perfil_2022.csv')
+passe_livre <- fread('../../data/passe_livre/passe_livre_resumo.csv')
+# espacial <- fread('../../data/spatial/electoral_sections_spatial.csv')
+munic <- fread('../../data/munic/munic_dummy_pt.csv')
+corr_ibge_tse <- fread("../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv", encoding = "UTF-8")
+pib <- fread("../../data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8")
+perfil <- fread('../../data/secoes/secoes_perfil_2022.csv')
+eleicao_2022 <- fread('../../data/secoes/secoes_2022.csv')
 
-# MERGE INFORMAÇÕES ESPACIAIS --------------------------------------------------
 eleicao_2022[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
+
+
+# MERGE spatial info --------------------------------------------------
 espacial[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 espacial <- espacial[,c("closest_dist_any", "closest_dist", "num_0500",
                         "num_1000", "num_3000","num_5000","num_10000",
@@ -31,19 +33,28 @@ eleicao_2022 <- merge(eleicao_2022, munic[,c("CD_MUNICIPIO", "dummy_pt", "code_m
                       by="CD_MUNICIPIO", all.x = T)
 
 # MERGE perfil -----------------------------------------------------------------
-perfil$mulheres <- perfil$mulher/perfil$qt_perfil
-perfil$educacao_1 <- perfil$educ_prim/perfil$qt_perfil
-perfil$idade_16_17 <- perfil$idade_16_17/perfil$qt_perfil
-perfil$idade_18_24 <- perfil$idade_18_24/perfil$qt_perfil
-perfil$idade_60M <- perfil$idade_60M/perfil$qt_perfil
+perfil[, mulheres := mulher / qt_perfil ]
+perfil[, educacao_1 := educ_prim / qt_perfil ]
+perfil[, idade_16_17 := idade_16_17 / qt_perfil ]
+perfil[, idade_18_24 := idade_18_24 / qt_perfil ]
+perfil[, idade_60M := idade_60M / qt_perfil ]
 
-
+summary(perfil$educacao_1)
 
 eleicao_2022 <- merge(eleicao_2022, perfil[,c("id_secao","mulheres","educacao_1",
                                               "idade_16_17","idade_18_24","idade_60M")],
                       by="id_secao", all.x = T)
 
+summary(eleicao_2022$educacao_1)
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#>  0.0000  0.2887  0.4150  0.4189  0.5494  1.0000     672
+
+a <- eleicao_2022[is.na(educacao_1)]
+
+subset(perfil, id_secao %in% a$id_secao)
+
 # MERGE PASSE LIVRE ------------------------------------------------------------
+
 # separa bases por turno
 t1 <- subset(eleicao_2022, NR_TURNO==1)
 t2 <- subset(eleicao_2022, NR_TURNO==2)
@@ -52,13 +63,14 @@ colnames(passe_livre_t1) <-c("CD_MUNICIPIO", "passe_livre")
 passe_livre_t2 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t2")]
 colnames(passe_livre_t2) <-c("CD_MUNICIPIO", "passe_livre") 
 
-# cria variável de tempo calendário
+# cria variavel de tempo calendario
 t1$t <- 1
 t2$t <- 2
 
 # merge data
 t1 <- merge(t1, passe_livre_t1, by="CD_MUNICIPIO", all.x = T)
 t2 <- merge(t2, passe_livre_t2, by="CD_MUNICIPIO", all.x = T)
+
 # ajustar NAs
 t1$passe_livre[is.na(t1$passe_livre)] <- 0
 t2$passe_livre[is.na(t2$passe_livre)] <- 0
@@ -70,6 +82,9 @@ eleicao_2022 <- rbind(t1, t2)
 eleicao_2022 <- merge(eleicao_2022, pib, by="code_muni")
 
 
+summary(eleicao_2022$educacao_1)
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#>  0.0000  0.2887  0.4150  0.4189  0.5494  1.0000     672
 
 
 
@@ -97,4 +112,4 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
 
 eleicao_2022 <- eleicao_2022[, ..my_var]
 
-fwrite(eleicao_2022, "data/base_DiD2022_secoes.csv")
+fwrite(eleicao_2022, "../../data/base_DiD2022_secoes.csv")

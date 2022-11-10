@@ -3,10 +3,10 @@ library(data.table)
 library(stringr)
 
 # read passe livre
-passe_livre <- read_excel("./data_raw/passe_livre/Passe Livre nas Eleições.xlsx", range = "B3:N396")
+passe_livre <- read_excel("../../data_raw/passe_livre/Passe Livre nas Eleições.xlsx", range = "B3:N396")
 
 # read zonas 
-files_zonas <- list.files(path = './data_raw/zonas', pattern = '.csv', full.names = T)
+files_zonas <- list.files(path = '../../data_raw/zonas', pattern = '.csv', full.names = T)
 zonas <- fread( files_zonas[2], nrows = Inf)
 
 # create data frame of municipalities with codes
@@ -28,6 +28,7 @@ passe_livre$city_uf_ID <- toupper(passe_livre$city_uf_ID)
 ## ADDITIONAL MANUAL FIXES
 # remove double spaces
 passe_livre$city_uf_ID <- str_squish(passe_livre$city_uf_ID)
+
 # typos
 passe_livre$city_uf_ID <- gsub("SANTO ANTONIO DA POSSE","SANTO ANTONIO DE POSSE",passe_livre$city_uf_ID)
 passe_livre$city_uf_ID <- gsub("SAO LUIZ DO PARAITINGA","SAO LUIS DO PARAITINGA",passe_livre$city_uf_ID)
@@ -53,7 +54,7 @@ passe_livre_resumo <- passe_livre[,c("CD_MUNICIPIO", "1º Turno","2º Turno")]
 colnames(passe_livre_resumo) <- c("CD_MUNICIPIO", "passe_livre_t1","passe_livre_t2")
 
 # save
-dir_passe_livre <- './data/passe_livre'
+dir_passe_livre <- '../../data/passe_livre'
 dir.create(dir_passe_livre)
 write.csv(passe_livre, paste0(dir_passe_livre,"/passe_livre.csv"), row.names = F)
 write.csv(passe_livre_resumo, paste0(dir_passe_livre,"/passe_livre_resumo.csv"), row.names = F)

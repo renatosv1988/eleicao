@@ -7,7 +7,7 @@ library(dplyr)
 #' quantidade de votos nominais e validos
 
 # read
-files_secao <- list.files(path = './data_raw/secoes', 
+files_secao <- list.files(path = '../../data_raw/secoes', 
                           pattern = '2018_BRASIL.csv', 
                           full.names = T)
 
@@ -34,8 +34,8 @@ secao_br$gov_2t <- ifelse(secao_br$NR_TURNO==2, secao_br$gov_2t, 0)
 
 
 #### save outputs --------------------------------------------------
-dir.create(path = './data/secoes')
+dir.create(path = '../../data/secoes')
 
 # comparecimento municipios
-fwrite(secao_br, './data/secoes/secoes_2018.csv')
+fwrite(secao_br, '../../data/secoes/secoes_2018.csv')
 
