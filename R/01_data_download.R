@@ -176,3 +176,26 @@ dir_tse_ibge <- '../../data_raw/tse_ibge'
 dir.create(dir_tse_ibge)
 download.file(url = "https://raw.githubusercontent.com/betafcc/Municipios-Brasileiros-TSE/master/municipios_brasileiros_tse.csv",
               destfile="../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv")
+
+
+#### urnas ---------------------------------------------------------------------
+dir_urnas <- '../../data_raw/urnas'
+dir.create(dir_urnas)
+
+
+# download data
+my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
+           "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO")
+options(timeout=100000)
+for(i in 2:2){# i <- 26
+ download.file(paste0("https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2022/buweb/bweb_1t_",
+                      my_uf[i],"_051020221321.zip"),
+               destfile = paste0(dir_urnas, paste0("/urnas_",my_uf[i],"_2022_1T.zip")))
+ download.file(paste0("https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2022/buweb/bweb_2t_",
+                      my_uf[i],"_311020221535.zip"),
+               destfile = paste0(dir_urnas, paste0("/urnas_",my_uf[i],"_2022_2T.zip")))
+ # list csvs from zip
+ 
+ 
+ cat(my_uf[i], " ")
+}

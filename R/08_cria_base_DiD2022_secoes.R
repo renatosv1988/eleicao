@@ -3,7 +3,7 @@ library(data.table)
 library(ggplot2)
 library(scales)
 library(fixest)
-library(basedosdados)
+#library(basedosdados)
 
 
 #cidades <- read_municipal_seat()
@@ -84,7 +84,73 @@ summary(eleicao_2022$educacao_1)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
 #>  0.0000  0.2887  0.4150  0.4189  0.5494  1.0000     672
 
+# adicionar votação por candidato ----------------------------------------------
+dir_urnas <- '../../data_raw/urnas'
+# UFs
+my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
+           "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO")
 
+# listas de resultados
+lista_T1 <- list()
+lista_T2 <- list()
+for(i in 1:27){# i <- 2
+ st <- Sys.time()
+  
+ 
+  # caminhos dos CSVs nos Zips
+  path_zip_T1 <- paste0(dir_urnas,"/urnas_", my_uf[i], "_2022_1T.zip")
+  path_csv_T1  <- unzip(path_zip_T1, list=T)$Name[grep(pattern=".csv", files)]
+  
+  path_zip_T2 <- paste0(dir_urnas,"/urnas_", my_uf[i], "_2022_2T.zip")
+  path_csv_T2  <- unzip(path_zip_T2, list=T)$Name[grep(pattern=".csv", files)]
+  
+  # ler dados das urnas
+  urnas_T1 <- read.csv(unz(path_zip_T1, path_csv_T1), sep = ";", encoding = "Latin-1")
+  urnas_T2 <- read.csv(unz(path_zip_T2, path_csv_T2), sep = ";", encoding = "Latin-1")
+  
+  # filtrar para eleição presidencial apenas
+  urnas_T1 <- as.data.table(subset(urnas_T1, DS_CARGO_PERGUNTA=="Presidente"))
+  urnas_T2 <- as.data.table(subset(urnas_T2, DS_CARGO_PERGUNTA=="Presidente"))
+  
+  # criar id_secao
+  urnas_T1[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
+  urnas_T2[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
+  # votos por candidato
+  urnas_T1$votos_lula <- ifelse(urnas_T1$NM_VOTAVEL=="LULA", urnas_T1$QT_VOTOS, 0)
+  urnas_T1$votos_jair <- ifelse(urnas_T1$NM_VOTAVEL=="JAIR BOLSONARO", urnas_T1$QT_VOTOS, 0)
+  urnas_T2$votos_lula <- ifelse(urnas_T2$NM_VOTAVEL=="LULA", urnas_T2$QT_VOTOS, 0)
+  urnas_T2$votos_jair <- ifelse(urnas_T2$NM_VOTAVEL=="JAIR BOLSONARO", urnas_T2$QT_VOTOS, 0)
+  # agregar por secao
+  votos_T1 <- urnas_T1[, .(votos_lula = sum(votos_lula),
+                           votos_jair = sum(votos_jair)), by = .(id_secao)]
+  votos_T2 <- urnas_T2[, .(votos_lula = sum(votos_lula),
+                           votos_jair = sum(votos_jair)), by = .(id_secao)]
+
+  lista_T1[[i]] <- votos_T1
+  lista_T2[[i]] <- votos_T2
+  
+  et <- Sys.time() - st
+  
+  cat(my_uf[i], " ", et, " ")
+}
+
+votos_T1 <- do.call(rbind, lista_T1)
+votos_T2 <- do.call(rbind, lista_T2)
+
+
+# merge data
+# separa bases por turno
+t1 <- subset(eleicao_2022, NR_TURNO==1)
+t2 <- subset(eleicao_2022, NR_TURNO==2)
+
+# merge data
+t1 <- merge(t1, votos_T1, by="id_secao", all.x = T)
+t2 <- merge(t2, votos_T2, by="id_secao", all.x = T)
+
+# junta as bases novamente
+eleicao_2022 <- rbind(t1, t2)
+
+# ajustar NAs
 
 # salvar arquivo final----------------------------------------------------------
 # seleciona apenas variáveis que serão usadas
@@ -105,9 +171,17 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
             "dist_sede", "closest_dist_any", "closest_dist",
             "num_0500", "num_1000","num_3000",
             "num_5000","num_10000",
+            "votos_lula", "votos_jair",
             
             "dummy_pt", "t", "passe_livre","PIB_PC")
 
 eleicao_2022 <- eleicao_2022[, ..my_var]
 
 fwrite(eleicao_2022, "../../data/base_DiD2022_secoes.csv")
+
+
+ggplot() +
+ geom_density(aes(votos_lula), eleicao_2022[eleicao_2022$NR_TURNO==2], color="firebrick") +
+ geom_density(aes(votos_jair), eleicao_2022[eleicao_2022$NR_TURNO==2], color="forestgreen") +
+ theme_classic() +
+ labs(x="votos por seção", y = "densidade")
