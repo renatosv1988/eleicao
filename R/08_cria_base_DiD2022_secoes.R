@@ -3,6 +3,7 @@ library(data.table)
 library(ggplot2)
 library(scales)
 library(fixest)
+library(vroom)
 #library(basedosdados)
 
 
@@ -76,6 +77,9 @@ t2$passe_livre[is.na(t2$passe_livre)] <- 0
 # junta as bases novamente
 eleicao_2022 <- rbind(t1, t2)
 
+
+
+
 # MERGE PIB_PC 2019 ------------------------------------------------------------
 eleicao_2022 <- merge(eleicao_2022, pib, by="code_muni")
 
@@ -83,6 +87,9 @@ eleicao_2022 <- merge(eleicao_2022, pib, by="code_muni")
 summary(eleicao_2022$educacao_1)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
 #>  0.0000  0.2887  0.4150  0.4189  0.5494  1.0000     672
+
+
+
 
 # adicionar votação por candidato ----------------------------------------------
 dir_urnas <- '../../data_raw/urnas'
@@ -93,38 +100,49 @@ my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
 # listas de resultados
 lista_T1 <- list()
 lista_T2 <- list()
-for(i in 1:27){# i <- 2
+
+for(i in 1:27){ # i <- 2
  st <- Sys.time()
   
  
   # caminhos dos CSVs nos Zips
   path_zip_T1 <- paste0(dir_urnas,"/urnas_", my_uf[i], "_2022_1T.zip")
-  path_csv_T1  <- unzip(path_zip_T1, list=T)$Name[grep(pattern=".csv", files)]
+  files <- unzip(path_zip_T1, list=T)$Name
+  path_csv_T1  <- files[files %like% '.csv']
   
   path_zip_T2 <- paste0(dir_urnas,"/urnas_", my_uf[i], "_2022_2T.zip")
-  path_csv_T2  <- unzip(path_zip_T2, list=T)$Name[grep(pattern=".csv", files)]
+  files <- unzip(path_zip_T2, list=T)$Name
+  path_csv_T2  <- files[files %like% '.csv']
   
   # ler dados das urnas
-  urnas_T1 <- read.csv(unz(path_zip_T1, path_csv_T1), sep = ";", encoding = "Latin-1")
-  urnas_T2 <- read.csv(unz(path_zip_T2, path_csv_T2), sep = ";", encoding = "Latin-1")
+   urnas_T1 <- read.csv(unz(path_zip_T1, path_csv_T1), sep = ";", encoding = "Latin-1")
+   urnas_T2 <- read.csv(unz(path_zip_T2, path_csv_T2), sep = ";", encoding = "Latin-1")
+  # urnas_T1 <- vroom(path_zip_T1, delim = ";") #, locale(encoding = "latin1"))
+  # urnas_T2 <- vroom(path_zip_T2, delim = ";") #, locale(encoding = "latin1"))
+  
   
   # filtrar para eleição presidencial apenas
   urnas_T1 <- as.data.table(subset(urnas_T1, DS_CARGO_PERGUNTA=="Presidente"))
   urnas_T2 <- as.data.table(subset(urnas_T2, DS_CARGO_PERGUNTA=="Presidente"))
   
   # criar id_secao
-  urnas_T1[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
-  urnas_T2[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
+  urnas_T1[, id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
+  urnas_T2[, id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
+  
+  urnas_T2[ id_secao == '27057 55 286']
   # votos por candidato
-  urnas_T1$votos_lula <- ifelse(urnas_T1$NM_VOTAVEL=="LULA", urnas_T1$QT_VOTOS, 0)
-  urnas_T1$votos_jair <- ifelse(urnas_T1$NM_VOTAVEL=="JAIR BOLSONARO", urnas_T1$QT_VOTOS, 0)
-  urnas_T2$votos_lula <- ifelse(urnas_T2$NM_VOTAVEL=="LULA", urnas_T2$QT_VOTOS, 0)
-  urnas_T2$votos_jair <- ifelse(urnas_T2$NM_VOTAVEL=="JAIR BOLSONARO", urnas_T2$QT_VOTOS, 0)
+  urnas_T1[, votos_lula := fifelse(NM_VOTAVEL=="LULA", QT_VOTOS, 0)]
+  urnas_T1[, votos_jair := fifelse(NM_VOTAVEL=="JAIR BOLSONARO", QT_VOTOS, 0)]
+  urnas_T2[, votos_lula := fifelse(NM_VOTAVEL=="LULA", QT_VOTOS, 0)]
+  urnas_T2[, votos_jair := fifelse(NM_VOTAVEL=="JAIR BOLSONARO", QT_VOTOS, 0)]
+  
   # agregar por secao
   votos_T1 <- urnas_T1[, .(votos_lula = sum(votos_lula),
-                           votos_jair = sum(votos_jair)), by = .(id_secao)]
+                           votos_jair = sum(votos_jair),
+                           votos_total = sum(QT_VOTOS)), by = .(id_secao)]
   votos_T2 <- urnas_T2[, .(votos_lula = sum(votos_lula),
-                           votos_jair = sum(votos_jair)), by = .(id_secao)]
+                           votos_jair = sum(votos_jair),
+                           votos_total = sum(QT_VOTOS)), by = .(id_secao)]
 
   lista_T1[[i]] <- votos_T1
   lista_T2[[i]] <- votos_T2
@@ -134,8 +152,9 @@ for(i in 1:27){# i <- 2
   cat(my_uf[i], " ", et, " ")
 }
 
-votos_T1 <- do.call(rbind, lista_T1)
-votos_T2 <- do.call(rbind, lista_T2)
+
+votos_T1 <- data.table::rbindlist(lista_T1)
+votos_T2 <- data.table::rbindlist(lista_T2)
 
 
 # merge data
@@ -151,6 +170,12 @@ t2 <- merge(t2, votos_T2, by="id_secao", all.x = T)
 eleicao_2022 <- rbind(t1, t2)
 
 # ajustar NAs
+
+summary(eleicao_2022$votos_lula)
+summary(eleicao_2022$votos_jair)
+summary(eleicao_2022$votos_total)
+
+
 
 # salvar arquivo final----------------------------------------------------------
 # seleciona apenas variáveis que serão usadas
@@ -171,11 +196,11 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
             "dist_sede", "closest_dist_any", "closest_dist",
             "num_0500", "num_1000","num_3000",
             "num_5000","num_10000",
-            "votos_lula", "votos_jair",
-            
+            "votos_lula", "votos_jair", "votos_total",
             "dummy_pt", "t", "passe_livre","PIB_PC")
 
 eleicao_2022 <- eleicao_2022[, ..my_var]
 
 fwrite(eleicao_2022, "../../data/base_DiD2022_secoes.csv")
+
 

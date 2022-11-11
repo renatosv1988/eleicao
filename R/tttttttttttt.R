@@ -18,6 +18,7 @@ library(dplyr)
 library(fixest)
 library(DRDID)
 library(ggplot2)
+library(purrr)
 
 options(scipen = 999)
 
@@ -106,7 +107,8 @@ step2 <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2
 summary(step2)
 
 
-df2[NR_TURNO==2, sum(QT_APTOS)]
+
+
 
 
 
@@ -146,8 +148,7 @@ summary(step2)
 
 
 
-# modelo 3 ----------------------------------------------------------------------
-# heterogenidade entre secoes
+# modelo 3a - heterogenidade educacao ------------------------------------------
 
 get_reg_group <- function(l, u){  # l = 0; u = .1 
 
@@ -170,7 +171,6 @@ get_reg_group <- function(l, u){  # l = 0; u = .1
 }
 
 
-library(purrr)
 
 
 output <- purrr::map2(.x = seq(0, .9, by=.1),
@@ -190,6 +190,115 @@ ggplot(data = output, aes(x= l, y=coef)) +
 
 
 
+
+# modelo 3b - heterogenidade distancia -----------------------------------------
+hist(df2$num_0500)
+hist(df2$num_1000)
+summary(df2$num_1000)
+
+# discretaize distance
+my_breaks <- seq(0, 190, by=10)
+my_breaks <- c(my_breaks, Inf)
+df2[, num_1000_cat := cut(num_1000,
+                          breaks= my_breaks,
+                          labels= my_breaks[-1])]
+
+table(df2$num_1000_cat, useNA = 'always')
+
+
+reg_group_dist <- function(i){  # i =50
+ message(i)
+ temp_df <- df2[ num_1000_cat == i]
+ 
+ 
+ step2 <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+                        fixef = 'id_secao', 
+                        cluster = 'code_muni',
+                        weights = ~ipw,
+                        data = temp_df)
+ 
+ output <- data.frame(i = i,
+                      coef = step2$coeftable[2, 1],
+                      se = step2$coeftable[2, 2]
+ )
+ 
+ return(output)
+}
+
+
+# run regressions
+output3b <- purrr::map(.x = my_breaks[-1],
+                      .f = reg_group_dist) |> rbindlist()
+
+
+ggplot(data = output3b, aes(x= i, y=coef)) +
+ geom_line() +
+ geom_ribbon(aes(ymax=coef + 1.96*se, ymin=coef - 1.96*se), alpha=.2) +
+ geom_hline(yintercept = 0)
+
+
+
+
+
+
+# modelo 3c - heterogenidade distancia e edu -----------------------------------------
+hist(df2$num_0500)
+hist(df2$num_1000)
+summary(df2$num_1000)
+
+# discretaize distance
+my_breaks <- seq(0, 190, by=10)
+my_breaks <- c(my_breaks, Inf)
+df2[, num_1000_cat := cut(num_1000,
+                          breaks= my_breaks,
+                          labels= my_breaks[-1])]
+
+table(df2$num_1000_cat, useNA = 'always')
+
+
+reg_group_dist_edu <- function(i){  # i =50
+ message(i)
+ temp_df <- df2[ num_1000_cat == i]
+ 
+ 
+ step2_low <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+                        fixef = 'id_secao', 
+                        cluster = 'code_muni',
+                        weights = ~ipw,
+                        data = subset(temp_df, educacao_1 >=  0.5)
+                        )
+ 
+ step2_high <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+                            fixef = 'id_secao', 
+                            cluster = 'code_muni',
+                            weights = ~ipw,
+                            data = subset(temp_df, educacao_1 <= 0.3)
+                            )
+ 
+ output_low <- data.frame(i = i,
+                          group = 'low',
+                          coef = step2_low$coeftable[2, 1],
+                          se = step2_low$coeftable[2, 2])
+ 
+ output_high <- data.frame(i = i,
+                           group = 'high',
+                           coef = step2_high$coeftable[2, 1],
+                           se = step2_high$coeftable[2, 2])
+ 
+ output <- rbind(output_low, output_high)
+ return(output)
+}
+
+
+# run regressions
+output3c <- purrr::map(.x = my_breaks[-1],
+                     .f = reg_group_dist_edu) |> rbindlist()
+
+
+ggplot(data = output3c, aes(x= i, y=coef, color=group, fill=group)) +
+ geom_line() +
+ geom_ribbon(aes(ymax=coef + 1.96*se, ymin=coef - 1.96*se), alpha=.2) +
+ geom_hline(yintercept = 0)
 
 
 
