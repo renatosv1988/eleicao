@@ -176,3 +176,46 @@ dir_tse_ibge <- '../../data_raw/tse_ibge'
 dir.create(dir_tse_ibge)
 download.file(url = "https://raw.githubusercontent.com/betafcc/Municipios-Brasileiros-TSE/master/municipios_brasileiros_tse.csv",
               destfile="../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv")
+
+
+#### urnas ---------------------------------------------------------------------
+dir_urnas <- '../../data_raw/urnas'
+dir.create(dir_urnas)
+
+
+# download data
+my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
+           "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO")
+options(timeout=100000)
+for(i in 1:27){# i <- 26
+ download.file(paste0("https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2022/buweb/bweb_1t_",
+                      my_uf[i],"_051020221321.zip"),
+               destfile = paste0(dir_urnas, paste0("/urnas_",my_uf[i],"_2022_1T.zip")))
+ download.file(paste0("https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2022/buweb/bweb_2t_",
+                      my_uf[i],"_311020221535.zip"),
+               destfile = paste0(dir_urnas, paste0("/urnas_",my_uf[i],"_2022_2T.zip")))
+ # list csvs from zip
+ 
+ 
+ cat(my_uf[i], " ")
+}
+
+
+# onibus São Paulo -------------------------------------------------------------
+dir_sp <- '../../data_raw/sp'
+dir.create(dir_sp)
+
+files <- c("https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/04SET2022.xls",
+           "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/11SET2022.xls",
+           "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/18SET2022.xls",
+           "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/25SET2022.xls",
+           "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/02OUT2022.xls",
+           "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/09OUT2022.xls",
+           "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/16OUT2022.xls",
+           "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/23OUT2022.xls")
+
+my_dates <- seq.Date(from=as.Date("2022-09-04"), to=as.Date("2022-10-23"), by="7 days")
+for(i in 1:length(files)){ #i<-1
+download.file(files[i],
+ destfile = paste0(dir_sp, paste0("/", my_dates[i], ".xls")))
+}
