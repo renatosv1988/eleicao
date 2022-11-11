@@ -191,6 +191,25 @@ fwrite(google1, file = '../../data/google/google.csv')
 
 
 
+# plot -------------
+library(ggsci)
+library(ggplot2)
+
+# keep only data on Sundays close to the election dates
+# 1o turno:  2 de outubro de 2022
+# 2o turno: 30 de outubro de 2022
+sundays <- c("2022-09-04",
+             "2022-09-11",
+             "2022-09-18",
+             "2022-09-25",
+             "2022-10-02",
+             "2022-10-09",
+             "2022-10-16",
+             "2022-10-23",
+             "2022-10-30") |> as.Date()
+
+
+google1 <- fread(file = '../../data/google/google.csv')
 
 
 summary(google1$passe_1)
@@ -213,7 +232,6 @@ temp_df2 <- temp_df[, .(mean_value=mean(value, na.rm=T),
                         p75 = quantile(value,0.75, na.rm=T)), by=.(variable, any_passe, date)]
 
 
-library(ggsci)
 
 ggplot() +
  geom_line(data=temp_df2, aes(x=as.Date(date), y=mean_value, color=any_passe),
