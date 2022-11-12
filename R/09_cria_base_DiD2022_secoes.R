@@ -4,27 +4,52 @@ library(ggplot2)
 library(scales)
 library(fixest)
 library(vroom)
-#library(basedosdados)
+
+`%nin%` <- negate(`%in%`)
+`%unlike%` <- negate(`%like%`)
 
 
-#cidades <- read_municipal_seat()
+# load data -------------------------------------------------------------------
+
 passe_livre <- fread('../../data/passe_livre/passe_livre_resumo.csv')
 espacial <- fread('../../data/spatial/electoral_sections_spatial.csv')
 munic <- fread('../../data/munic/munic_dummy_pt.csv')
 corr_ibge_tse <- fread("../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv", encoding = "UTF-8")
 pib <- fread("../../data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8")
 perfil <- fread('../../data/secoes/secoes_perfil_2022.csv')
-eleicao_2022 <- fread('../../data/secoes/secoes_2022.csv')
+eleicao_2022_raw <- fread('../../data/secoes/secoes_2022.csv')
 
-eleicao_2022[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
+eleicao_2022_raw[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
+
+
+# filter  --------------------------------------------------
+
+# remove detention centers
+nrow(eleicao_2022)
+#> 942020
+
+detention_centers <- c('PRISIONAL|SÓCIO EDUCATIVO|PENITENCIÁRIO|INTERNAÇÃO|UPR DE|UI/UIP|PRESÍDIO|DETENÇÃO|PRIVAÇÃO|PENAL|PENITENCIARIA|PENITENCIÁRIA|SOCIOEDUCATIVO|CADEIA|FUNASE|CADE|CASE|VOTO EM TRÂNSITO|PRESIDIO|PRISIONAL|CENTRO DE RECUPERAÇÃO|SOCIO EDUCATIVO|IASES|CDPSM|FUNDAÇÃO CASA|CDP|SÓCIOEDUCATIVO|RESSOCIALIZAÇÃO|PENINTENCIÁRIO|RESSOCIALIZAÇÃO')
+eleicao_2022 <- eleicao_2022_raw[ NM_LOCAL_VOTACAO %unlike% detention_centers]
+nrow(eleicao_2022)
+#> 940932
+
+
 
 
 # MERGE spatial info --------------------------------------------------
-espacial[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
+# espacial[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 espacial <- espacial[,c("dist_sede", "closest_dist_any", "closest_dist", "num_0500",
                         "num_1000", "num_3000","num_5000","num_10000",
                         "id_secao")]
 eleicao_2022 <- merge(eleicao_2022, espacial, by="id_secao", all.x = T)
+
+summary(eleicao_2022$num_1000)
+#> Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#> 1.00   15.00   34.00   45.43   65.00  313.00 
+
+
+
+
 
 # MERGE MUNIC ------------------------------------------------------------------
 corr_ibge_tse <- corr_ibge_tse[,c("codigo_tse", "codigo_ibge")]
@@ -32,6 +57,9 @@ colnames(corr_ibge_tse) <- c("CD_MUNICIPIO", "code_muni")
 munic <- merge(munic, corr_ibge_tse, by="code_muni", all.x = T)
 eleicao_2022 <- merge(eleicao_2022, munic[,c("CD_MUNICIPIO", "dummy_pt", "code_muni")],
                       by="CD_MUNICIPIO", all.x = T)
+
+summary(eleicao_2022$dummy_pt)
+
 
 # MERGE perfil -----------------------------------------------------------------
 perfil[, mulheres := mulher / qt_perfil ]
@@ -48,7 +76,10 @@ eleicao_2022 <- merge(eleicao_2022, perfil[,c("id_secao","mulheres","educacao_1"
 
 summary(eleicao_2022$educacao_1)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-#>  0.0000  0.2887  0.4150  0.4189  0.5494  1.0000     672
+#>  0.0000  0.2887  0.4150  0.4189  0.5494  1.0000     210   # pq ????
+
+#  check NAs
+# eleicao_2022[is.na(educacao_1)] |> View()
 
 
 
@@ -78,83 +109,26 @@ t2$passe_livre[is.na(t2$passe_livre)] <- 0
 eleicao_2022 <- rbind(t1, t2)
 
 
+summary(eleicao_2022$passe_livre)
+#>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#> 0.0000  0.0000  0.0000  0.3035  1.0000  1.0000 
+
 
 
 # MERGE PIB_PC 2019 ------------------------------------------------------------
 eleicao_2022 <- merge(eleicao_2022, pib, by="code_muni")
 
-
-summary(eleicao_2022$educacao_1)
-#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-#>  0.0000  0.2887  0.4150  0.4189  0.5494  1.0000     672
+summary(eleicao_2022$PIB_PC)
+#> Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#> 4483   16152   28042   34611   47749  464884 
 
 
 
 
 # adicionar votação por candidato ----------------------------------------------
-dir_urnas <- '../../data_raw/urnas'
-# UFs
-my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
-           "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO")
 
-# listas de resultados
-lista_T1 <- list()
-lista_T2 <- list()
-
-for(i in 1:27){ # i <- 2
- st <- Sys.time()
-  
- 
-  # caminhos dos CSVs nos Zips
-  path_zip_T1 <- paste0(dir_urnas,"/urnas_", my_uf[i], "_2022_1T.zip")
-  files <- unzip(path_zip_T1, list=T)$Name
-  path_csv_T1  <- files[files %like% '.csv']
-  
-  path_zip_T2 <- paste0(dir_urnas,"/urnas_", my_uf[i], "_2022_2T.zip")
-  files <- unzip(path_zip_T2, list=T)$Name
-  path_csv_T2  <- files[files %like% '.csv']
-  
-  # ler dados das urnas
-   urnas_T1 <- read.csv(unz(path_zip_T1, path_csv_T1), sep = ";", encoding = "Latin-1")
-   urnas_T2 <- read.csv(unz(path_zip_T2, path_csv_T2), sep = ";", encoding = "Latin-1")
-  # urnas_T1 <- vroom(path_zip_T1, delim = ";") #, locale(encoding = "latin1"))
-  # urnas_T2 <- vroom(path_zip_T2, delim = ";") #, locale(encoding = "latin1"))
-  
-  
-  # filtrar para eleição presidencial apenas
-  urnas_T1 <- as.data.table(subset(urnas_T1, DS_CARGO_PERGUNTA=="Presidente"))
-  urnas_T2 <- as.data.table(subset(urnas_T2, DS_CARGO_PERGUNTA=="Presidente"))
-  
-  # criar id_secao
-  urnas_T1[, id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
-  urnas_T2[, id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
-  
-  urnas_T2[ id_secao == '27057 55 286']
-  # votos por candidato
-  urnas_T1[, votos_lula := fifelse(NM_VOTAVEL=="LULA", QT_VOTOS, 0)]
-  urnas_T1[, votos_jair := fifelse(NM_VOTAVEL=="JAIR BOLSONARO", QT_VOTOS, 0)]
-  urnas_T2[, votos_lula := fifelse(NM_VOTAVEL=="LULA", QT_VOTOS, 0)]
-  urnas_T2[, votos_jair := fifelse(NM_VOTAVEL=="JAIR BOLSONARO", QT_VOTOS, 0)]
-  
-  # agregar por secao
-  votos_T1 <- urnas_T1[, .(votos_lula = sum(votos_lula),
-                           votos_jair = sum(votos_jair),
-                           votos_total = sum(QT_VOTOS)), by = .(id_secao)]
-  votos_T2 <- urnas_T2[, .(votos_lula = sum(votos_lula),
-                           votos_jair = sum(votos_jair),
-                           votos_total = sum(QT_VOTOS)), by = .(id_secao)]
-
-  lista_T1[[i]] <- votos_T1
-  lista_T2[[i]] <- votos_T2
-  
-  et <- Sys.time() - st
-  
-  cat(my_uf[i], " ", et, " ")
-}
-
-
-votos_T1 <- data.table::rbindlist(lista_T1)
-votos_T2 <- data.table::rbindlist(lista_T2)
+votos_T1 <- fread('../../data/votes/votos_T1.csv')
+votos_T2 <- fread('../../data/votes/votos_T2.csv')
 
 
 # merge data

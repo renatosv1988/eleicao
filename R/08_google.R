@@ -11,6 +11,7 @@ library(data.table)
 library(magrittr)
 library(stringi)
 library(stringr)
+library(ggsci)
 
 `%nin%` = Negate(`%in%`)
 

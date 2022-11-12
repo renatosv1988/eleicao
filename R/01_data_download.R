@@ -219,3 +219,18 @@ for(i in 1:length(files)){ #i<-1
 download.file(files[i],
  destfile = paste0(dir_sp, paste0("/", my_dates[i], ".xls")))
 }
+
+
+
+
+# spatial coordinates -------------------------------------------------------------
+#' by Marcelo Oliveira
+#' https://twitter.com/Capyvara/status/1590918812937117696
+
+dir_spatial <- '../../data_raw/spatial'
+dir.create(dir_spatial)
+
+
+# download data
+download.file("https://storage.googleapis.com/capyvara_public/tse/geocoded_voting_places_001.csv",
+              destfile = paste0(dir_spatial, "/geocoded_voting_places_001.csv"))
