@@ -4,6 +4,7 @@ library(ggplot2)
 library(scales)
 library(fixest)
 library(vroom)
+library(purrr)
 
 `%nin%` <- negate(`%in%`)
 `%unlike%` <- negate(`%like%`)
@@ -17,15 +18,18 @@ munic <- fread('../../data/munic/munic_dummy_pt.csv')
 corr_ibge_tse <- fread("../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv", encoding = "UTF-8")
 pib <- fread("../../data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8")
 perfil <- fread('../../data/secoes/secoes_perfil_2022.csv')
-eleicao_2022_raw <- fread('../../data/secoes/secoes_2022.csv')
+votos_T1 <- fread('../../data/votes/votos_T1.csv')
+votos_T2 <- fread('../../data/votes/votos_T2.csv')
 
+eleicao_2022_raw <- fread('../../data/secoes/secoes_2022.csv')
 eleicao_2022_raw[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 
+gc()
 
 # filter  --------------------------------------------------
 
 # remove detention centers
-nrow(eleicao_2022)
+nrow(eleicao_2022_raw)
 #> 942020
 
 detention_centers <- c('PRISIONAL|SÓCIO EDUCATIVO|PENITENCIÁRIO|INTERNAÇÃO|UPR DE|UI/UIP|PRESÍDIO|DETENÇÃO|PRIVAÇÃO|PENAL|PENITENCIARIA|PENITENCIÁRIA|SOCIOEDUCATIVO|CADEIA|FUNASE|CADE|CASE|VOTO EM TRÂNSITO|PRESIDIO|PRISIONAL|CENTRO DE RECUPERAÇÃO|SOCIO EDUCATIVO|IASES|CDPSM|FUNDAÇÃO CASA|CDP|SÓCIOEDUCATIVO|RESSOCIALIZAÇÃO|PENINTENCIÁRIO|RESSOCIALIZAÇÃO')
@@ -59,6 +63,8 @@ eleicao_2022 <- merge(eleicao_2022, munic[,c("CD_MUNICIPIO", "dummy_pt", "code_m
                       by="CD_MUNICIPIO", all.x = T)
 
 summary(eleicao_2022$dummy_pt)
+#>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#> 0.0000  0.0000  1.0000  0.7105  1.0000  1.0000 
 
 
 # MERGE perfil -----------------------------------------------------------------
@@ -127,9 +133,6 @@ summary(eleicao_2022$PIB_PC)
 
 # adicionar votação por candidato ----------------------------------------------
 
-votos_T1 <- fread('../../data/votes/votos_T1.csv')
-votos_T2 <- fread('../../data/votes/votos_T2.csv')
-
 
 # merge data
 # separa bases por turno
@@ -143,11 +146,18 @@ t2 <- merge(t2, votos_T2, by="id_secao", all.x = T)
 # junta as bases novamente
 eleicao_2022 <- rbind(t1, t2)
 
-# ajustar NAs
 
 summary(eleicao_2022$votos_lula)
+#> Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#> 0.0    89.0   119.0   124.6   156.0   423.0 
+
 summary(eleicao_2022$votos_jair)
+#> Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#> 0.0    78.0   118.0   115.8   153.0   384.0 
+
 summary(eleicao_2022$votos_total)
+#> Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#> 10.0   228.0   269.0   262.6   302.0   508.0 
 
 
 
