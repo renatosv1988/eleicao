@@ -1,8 +1,7 @@
 library(data.table)
 library(vroom)
+library(tictoc)
 
-`%nin%` <- negate(`%in%`)
-`%unlike%` <- negate(`%like%`)
 
 # adicionar votação por candidato ----------------------------------------------
 dir_urnas <- '../../data_raw/urnas'
@@ -16,21 +15,30 @@ lista_T1 <- list()
 lista_T2 <- list()
 
 for(i in 1:27){ # i <- 2
- st <- Sys.time()
- 
+tictoc::tic()
  
  # caminhos dos CSVs nos Zips
+ temp_dir_1 <- tempdir()
  path_zip_T1 <- paste0(dir_urnas,"/urnas_", my_uf[i], "_2022_1T.zip")
  files <- unzip(path_zip_T1, list=T)$Name
  path_csv_T1  <- files[files %like% '.csv']
+ unzip(path_zip_T1, files  = path_csv_T1, exdir = temp_dir_1)
+ path_csv_T1 <- paste0(temp_dir_1,'/',path_csv_T1)
+  
  
+ temp_dir_2 <- tempdir()
  path_zip_T2 <- paste0(dir_urnas,"/urnas_", my_uf[i], "_2022_2T.zip")
  files <- unzip(path_zip_T2, list=T)$Name
  path_csv_T2  <- files[files %like% '.csv']
+ unzip(path_zip_T2, files  = path_csv_T2, exdir = temp_dir_2)
+ path_csv_T2 <- paste0(temp_dir_2,'/',path_csv_T2)
  
  # ler dados das urnas
- urnas_T1 <- read.csv(unz(path_zip_T1, path_csv_T1), sep = ";", encoding = "Latin-1")
- urnas_T2 <- read.csv(unz(path_zip_T2, path_csv_T2), sep = ";", encoding = "Latin-1")
+ urnas_T1 <- fread( path_csv_T1 , sep = ";", encoding = "Latin-1")
+ urnas_T2 <- fread( path_csv_T2, sep = ";", encoding = "Latin-1")
+ gc()
+ # urnas_T1 <- read.csv(unz(path_zip_T1, path_csv_T1), sep = ";", encoding = "Latin-1")
+ # urnas_T2 <- read.csv(unz(path_zip_T2, path_csv_T2), sep = ";", encoding = "Latin-1")
  # urnas_T1 <- vroom(path_zip_T1, delim = ";") #, locale(encoding = "latin1"))
  # urnas_T2 <- vroom(path_zip_T2, delim = ";") #, locale(encoding = "latin1"))
  
@@ -60,9 +68,9 @@ for(i in 1:27){ # i <- 2
  lista_T1[[i]] <- votos_T1
  lista_T2[[i]] <- votos_T2
  
- et <- Sys.time() - st
+ et <- tictoc::toc(quiet = TRUE)
  
- cat(my_uf[i], " ", et, " ")
+ cat(my_uf[i], " ", et$callback_msg, " \n")
 }
 
 
