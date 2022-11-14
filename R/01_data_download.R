@@ -213,10 +213,10 @@ options(timeout=100000)
 for(i in 1:27){# i <- 26
  download.file(paste0("https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2018/buweb/BWEB_1t_",
                       my_uf[i],"_101020181938.zip"),
-               destfile = paste0(dir_urnas_2018, paste0("/urnas_",my_uf[i],"_2022_1T.zip")))
+               destfile = paste0(dir_urnas_2018, paste0("/urnas_",my_uf[i],"_2018_1T.zip")))
  download.file(paste0("https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2018/buweb/BWEB_2t_",
                       my_uf[i],"_301020181744.zip"),
-               destfile = paste0(dir_urnas_2018, paste0("/urnas_",my_uf[i],"_2022_2T.zip")))
+               destfile = paste0(dir_urnas_2018, paste0("/urnas_",my_uf[i],"_2018_2T.zip")))
  # list csvs from zip
  
  
