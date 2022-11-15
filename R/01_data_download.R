@@ -201,6 +201,28 @@ for(i in 1:27){# i <- 26
 }
 
 
+#### urnas 2018 ----------------------------------------------------------------
+dir_urnas_2018 <- '../../data_raw/urnas_2018'
+dir.create(dir_urnas_2018)
+
+
+# download data
+my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
+           "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO")
+options(timeout=100000)
+for(i in 1:27){# i <- 26
+ download.file(paste0("https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2018/buweb/BWEB_1t_",
+                      my_uf[i],"_101020181938.zip"),
+               destfile = paste0(dir_urnas_2018, paste0("/urnas_",my_uf[i],"_2018_1T.zip")))
+ download.file(paste0("https://cdn.tse.jus.br/estatistica/sead/eleicoes/eleicoes2018/buweb/BWEB_2t_",
+                      my_uf[i],"_301020181744.zip"),
+               destfile = paste0(dir_urnas_2018, paste0("/urnas_",my_uf[i],"_2018_2T.zip")))
+ # list csvs from zip
+ 
+ 
+ cat(my_uf[i], " ")
+}
+
 # onibus São Paulo -------------------------------------------------------------
 dir_sp <- '../../data_raw/sp'
 dir.create(dir_sp)
