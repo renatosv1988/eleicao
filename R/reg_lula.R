@@ -7,7 +7,6 @@
 
 
 
-
 library(data.table)
 library(dplyr)
 library(fixest)
@@ -137,6 +136,15 @@ df_sections[, num_1000_cat20 := cut(num_1000,
 
 table(df_sections$num_1000_cat20, useNA = 'always')
 
+# density quantiles
+df_sections[, num_1000_decile := cut(num_1000,
+                                     breaks = quantile(num_1000, na.rm=T,
+                                                       probs = seq(0, 1 , by = .1)),
+                                     include.lowest = TRUE,
+                                     ordered_result = TRUE,
+                                     labels = 1:10) ]
+
+
 # add regions
 regions <- geobr::read_region()
 regions$geom <- NULL
@@ -261,8 +269,32 @@ step2 <- fixest::feols(votos_lula_p~turno2_dummy + passe_livre_2 + turno2_dummy:
 summary(step2)
 
 
+modelsummary::modelsummary(step2, stars = T)
 
 
+
+temp_df <- df_sections[, .(mean_value=mean(votos_lula_p, na.rm=T),
+                           p25 = quantile(votos_lula_p,0.25, na.rm=T),
+                           p75 = quantile(votos_lula_p,0.75, na.rm=T)), by=.(NR_TURNO, passe_livre_2)]
+
+
+
+ggplot() +
+ geom_line(data=temp_df, aes(x=NR_TURNO, y=mean_value, color=factor(passe_livre_2)),
+           position = position_dodge2(width = .2)) +
+ geom_pointrange(data=temp_df,
+                 position = position_dodge2(width = .2),
+                 show.legend = FALSE,
+                 aes(x=NR_TURNO, y=mean_value, color=factor(passe_livre_2),
+                     ymin = p25,
+                     ymax = p75)) +
+ labs(y='Voter turnout', x = 'Election round', color='Free transit') +
+ scale_x_continuous( breaks =  c(1, 2)) +
+ scale_y_continuous(labels = scales::percent) +
+ #scale_color_npg() +
+ #scale_color_uchicago() +
+ scale_color_jama() +
+ theme_classic()
 
 
 
@@ -357,13 +389,14 @@ output3a <- purrr::map(.x = levels(df_sections$educacao_1_decile),
 
 ggplot(data = output3a, aes(x= edu_cat, y=coef)) +
  geom_pointrange(data=output3a,
+                 color='#0d6556',
                  # show.legend = FALSE,
                  aes(x=edu_cat, y=coef,
                      ymin = coef - 1.96*se,
                      ymax = coef + 1.96*se)) +
- geom_point() +
+ geom_point(color='#0d6556') +
  geom_hline(yintercept = 0, color='gray20') +
- labs(x= 'Percentage of low\nsocioeconomic individuals') +
+ labs(x= 'Deciles of low\nsocioeconomic individuals') +
  theme_classic()
 
 
@@ -372,11 +405,11 @@ ggplot(data = output3a, aes(x= edu_cat, y=coef)) +
 
 # modelo 3b - heterogenidade densidade de secoes -----------------------------------------
 
-table(df_sections$num_1000_cat10)
+table(df_sections$num_1000_decile)
 
 reg_dens <- function(i){  # i = 50
  message(i)
- temp_df <- df_sections[ num_1000_cat10 == i]
+ temp_df <- df_sections[ num_1000_decile == i]
  
  
  step2 <- fixest::feols(votos_lula_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
@@ -395,7 +428,7 @@ reg_dens <- function(i){  # i = 50
 
 
 # run regressions
-output3b <- purrr::map(.x = levels(df_sections$num_1000_cat10),
+output3b <- purrr::map(.x = levels(df_sections$num_1000_decile),
                        .f = reg_dens) |> rbindlist()
 
 
@@ -414,10 +447,10 @@ ggplot(data = output3b, aes(x= as.numeric(i), y=coef)) +
 # modelo 3c - heterogenidade distancia e edu -----------------------------------------
 
 
-table(df_sections$num_1000_cat20, useNA = 'always')
+table(df_sections$num_1000_decile, useNA = 'always')
 
 # create socioeconomic status level
-df_sections[, ses := ifelse( educacao_1 >= .3, 'low', 'high')]
+df_sections[, ses := ifelse( educacao_1 >= .4, 'low', 'high')]
 table(df_sections$ses, useNA = 'always')
 
 
@@ -425,7 +458,7 @@ table(df_sections$ses, useNA = 'always')
 # reg function
 reg_group_dist_edu <- function(i){  # i = '60' i = Inf
  message(i)
- temp_df <- df_sections[ num_1000_cat20 == i & !is.na(educacao_1)]
+ temp_df <- df_sections[ num_1000_decile == i & !is.na(ses)]
  
  step2_low <- fixest::feols(votos_lula_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                             fixef = 'id_secao', 
@@ -441,12 +474,12 @@ reg_group_dist_edu <- function(i){  # i = '60' i = Inf
                              data = subset(temp_df, ses == 'high')
  )
  
- output_low <- data.frame(i = i,
+ output_low <- data.frame(i = as.numeric(i),
                           group = 'low',
                           coef = step2_low$coeftable[2, 1],
                           se = step2_low$coeftable[2, 2])
  
- output_high <- data.frame(i = i,
+ output_high <- data.frame(i = as.numeric(i),
                            group = 'high',
                            coef = step2_high$coeftable[2, 1],
                            se = step2_high$coeftable[2, 2])
@@ -457,7 +490,7 @@ reg_group_dist_edu <- function(i){  # i = '60' i = Inf
 
 
 # run regressions
-output3c <- purrr::map(.x = my_breaks[-1],
+output3c <- purrr::map(.x = levels(df_sections$num_1000_decile),
                        .f = reg_group_dist_edu) |> rbindlist()
 
 
@@ -465,7 +498,7 @@ ggplot(data = output3c, aes(x= i, y=coef, color=group, fill=group)) +
  geom_ribbon(aes(ymax=coef + 1.96*se, ymin=coef - 1.96*se), alpha=.2) +
  geom_line(show.legend = F) +
  geom_hline(yintercept = 0, color='gray20') +
- labs(x='Density of electoral sections', fill='SES', color='SES') +
+ labs(x='Deciles of electoral section density', fill='SES', color='SES') +
  theme_classic()
 
 
