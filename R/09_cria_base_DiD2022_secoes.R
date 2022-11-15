@@ -20,8 +20,7 @@ pib <- fread("../../data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8"
 perfil <- fread('../../data/secoes/secoes_perfil_2022.csv')
 votos_T1 <- fread('../../data/votes/votos_T1.csv')
 votos_T2 <- fread('../../data/votes/votos_T2.csv')
-votos_T1_18 <- fread('../../data/votes_2018/votos_T1.csv')
-votos_T2_18 <- fread('../../data/votes_2018/votos_T2.csv')
+SE18 <- fread('../../data/secoes/secoes_2018.csv')
 eleicao_2022_raw <- fread('../../data/secoes/secoes_2022.csv')
 eleicao_2022_raw[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 
@@ -162,7 +161,7 @@ summary(eleicao_2022$votos_total)
 
 
 # adicionar variação de comparecimento por municipio em 2018 -------------------
-SE18 <- fread('../../data/secoes/secoes_2018.csv')
+
 # separar por turno
 T1 <- SE18[SE18$NR_TURNO==1,]
 T2 <- SE18[SE18$NR_TURNO==2,]
