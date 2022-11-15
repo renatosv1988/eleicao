@@ -6,7 +6,7 @@ library(cowplot)
 library(geobr)
 
 # ler base de eleições
-BD <- fread("../../data/base_DiD2022_secoes.csv")
+BD <- fread("../../data/base_DiD2018_secoes.csv")
 
 # diferença de percentual Lula-Jair
 BD$pct_lula <-  (BD$votos_lula)/BD$QT_APTOS
@@ -126,15 +126,16 @@ MMC <- merge(MC, MM[,c("code_muni","d_c", "aptos")], by.x="code_muni", by.y="cod
 summary(MC$aptos)
 # Remove plot axis
 # limitar valores extremos
-MMC$d_c[MMC$d_c < -0.02] <- -0.02
-MMC$d_c[MMC$d_c > 0.02] <- 0.02
+
+MMC$d_c[MMC$d_c < -0.03] <- -0.03
+MMC$d_c[MMC$d_c > 0.01] <- 0.01
 # plot
 ggplot() +
  geom_sf(fill="white",data=UFM, color="gray", size=.15) +
  geom_point(aes(color=d_c*100, size=aptos, geometry=geometry),data=MMC, stat = "sf_coordinates") +
  labs(subtitle="comparecimento (2ºT - 1ºT)", size=8) +
  theme_void() +
- scale_color_gradient2(low="firebrick", high="royalblue", limits = c(-2,2)) +
+ scale_color_gradient2(low="firebrick", high="royalblue", limits = c(-3,1), midpoint = -1) +
  labs(color="(p.p.)") +
  theme(legend.position = "bottom") +
  scale_size_continuous(range=c(0.5, 10), breaks=c(10^3, 10^4, 10^5, 10^6, 10^7), guide="none")
