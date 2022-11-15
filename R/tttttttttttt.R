@@ -71,6 +71,14 @@ dd1 <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_d
 
 summary(dd1)
 
+# interagindo com a variação observada em 2018
+#dd1x <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2
+#                      + turno2_dummy:variacao_comparecimento_2018, 
+#                     fixef = 'id_secao', 
+#                     cluster = 'code_muni',
+#                     data = df2)
+#summary(dd1x)
+#etable(dd1, dd1x)
 
 
 # modelo 2a ----------------------------------------------------------------------
