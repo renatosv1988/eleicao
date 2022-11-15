@@ -20,7 +20,8 @@ pib <- fread("../../data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8"
 perfil <- fread('../../data/secoes/secoes_perfil_2022.csv')
 votos_T1 <- fread('../../data/votes/votos_T1.csv')
 votos_T2 <- fread('../../data/votes/votos_T2.csv')
-
+votos_T1_18 <- fread('../../data/votes_2018/votos_T1.csv')
+votos_T2_18 <- fread('../../data/votes_2018/votos_T2.csv')
 eleicao_2022_raw <- fread('../../data/secoes/secoes_2022.csv')
 eleicao_2022_raw[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 
@@ -41,7 +42,7 @@ nrow(eleicao_2022)
 
 
 # MERGE spatial info --------------------------------------------------
-# espacial[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
+espacial[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 espacial <- espacial[,c("dist_sede", "closest_dist_any", "closest_dist", "num_0500",
                         "num_1000", "num_3000","num_5000","num_10000",
                         "id_secao")]
@@ -160,6 +161,26 @@ summary(eleicao_2022$votos_total)
 #> 10.0   228.0   269.0   262.6   302.0   508.0 
 
 
+# adicionar variação de comparecimento por municipio em 2018 -------------------
+SE18 <- fread('../../data/secoes/secoes_2018.csv')
+# separar por turno
+T1 <- SE18[SE18$NR_TURNO==1,]
+T2 <- SE18[SE18$NR_TURNO==2,]
+# calcular comparecimento por municipio por turno
+M1 <- T1[,.(comparecimento_t1= sum(QT_COMPARECIMENTO),
+            aptos_t1=sum(QT_APTOS)),by=CD_MUNICIPIO]
+M2 <- T2[,.(comparecimento_t2= sum(QT_COMPARECIMENTO),
+            aptos_t2=sum(QT_APTOS)),by=CD_MUNICIPIO]
+M1$comp_t1 <- M1$comparecimento_t1/M1$aptos_t1
+M2$comp_t2 <- M2$comparecimento_t2/M2$aptos_t2
+# juntar turnos
+MM <- merge(M1, M2[,c("CD_MUNICIPIO","comp_t2")], by="CD_MUNICIPIO", all.x = T)
+# calcular variação
+MM$variacao_comparecimento_2018 <- MM$comp_t2-MM$comp_t1
+# merge na base principal
+eleicao_2022 <- merge(eleicao_2022,
+                      MM[,c("CD_MUNICIPIO","variacao_comparecimento_2018")],
+                      by="CD_MUNICIPIO", all.x = T)
 
 # salvar arquivo final----------------------------------------------------------
 # seleciona apenas variáveis que serão usadas
@@ -176,6 +197,8 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
             "mulheres","educacao_1",
             "idade_16_17","idade_18_24","idade_60M",
             "comparecimento_2022","abstencao_2022",
+            
+            "variacao_comparecimento_2018",
             
             "dist_sede", "closest_dist_any", "closest_dist",
             "num_0500", "num_1000","num_3000",
