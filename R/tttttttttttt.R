@@ -285,8 +285,10 @@ ggplot() +
 
 
 
-# Model 2. by REGIAO ------------------------------------------
 
+
+
+# Model 2. by REGIAO ------------------------------------------
 
 reg_region <- function(r){  # r = 'Norte'
  
@@ -339,6 +341,41 @@ ggplot() +
 
 
 
+
+# Model 2. URBAN vs RURAL  ------------------------------------------
+
+
+reg_urban <- function(z){  # z = 'urban'
+ 
+ # select group
+ temp_df_section <- df_sections[ zone == z, ]
+ 
+ # reg
+ step2 <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+                        fixef = 'id_secao', 
+                        cluster = 'code_muni',
+                        weights = ~ipw,
+                        data = temp_df_section)
+ 
+ output <- data.frame(zone = z,
+                      coef = step2$coeftable[2, 1],
+                      se = step2$coeftable[2, 2]) 
+ return(output)
+}
+
+output_did_urban <- purrr::map(.x = unique(df_sections$zone),
+                                .f = reg_urban) |> rbindlist()
+
+
+ggplot() +
+ geom_point(data = output_did_urban, aes(x= zone, y=coef)) +
+ geom_pointrange(data=output_did_urban,
+                 # show.legend = FALSE,
+                 aes(x=zone, y=coef,
+                     ymin = coef - 1.96*se,
+                     ymax = coef + 1.96*se)) +
+ geom_hline(yintercept = 0, color='gray20') +
+ theme_classic()
 
 
 
