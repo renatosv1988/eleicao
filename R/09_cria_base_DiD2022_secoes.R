@@ -14,7 +14,7 @@ library(purrr)
 
 passe_livre <- fread('../../data/passe_livre/passe_livre_resumo.csv')
 espacial <- fread('../../data/spatial/electoral_sections_spatial.csv')
-munic <- fread('../../data/munic/munic_dummy_pt.csv')
+munic <- fread('../../data/munic/munic_dummy_pt.csv', encoding = 'UTF-8')
 corr_ibge_tse <- fread("../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv", encoding = "UTF-8")
 pib <- fread("../../data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8")
 perfil <- fread('../../data/secoes/secoes_perfil_2022.csv')
@@ -44,14 +44,14 @@ nrow(eleicao_2022)
 # espacial[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 espacial <- espacial[,c("dist_sede", "closest_dist_any", "closest_dist", "num_0500",
                         "num_1000", "num_3000","num_5000","num_10000",
-                        "id_secao")]
+                        "id_secao", 'zone')]
 eleicao_2022 <- merge(eleicao_2022, espacial, by="id_secao", all.x = T)
 
 summary(eleicao_2022$num_1000)
 #> Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #> 1.00   15.00   34.00   45.43   65.00  313.00 
 
-
+table(eleicao_2022$zone)
 
 
 
@@ -94,30 +94,31 @@ summary(eleicao_2022$educacao_1)
 # separa bases por turno
 t1 <- subset(eleicao_2022, NR_TURNO==1)
 t2 <- subset(eleicao_2022, NR_TURNO==2)
+
 passe_livre_t1 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t1")]
 colnames(passe_livre_t1) <-c("CD_MUNICIPIO", "passe_livre") 
 passe_livre_t2 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t2")]
 colnames(passe_livre_t2) <-c("CD_MUNICIPIO", "passe_livre") 
 
-# cria variavel de tempo calendario
-t1$t <- 1
-t2$t <- 2
-
 # merge data
 t1 <- merge(t1, passe_livre_t1, by="CD_MUNICIPIO", all.x = T)
 t2 <- merge(t2, passe_livre_t2, by="CD_MUNICIPIO", all.x = T)
 
-# ajustar NAs
-t1$passe_livre[is.na(t1$passe_livre)] <- 0
-t2$passe_livre[is.na(t2$passe_livre)] <- 0
+
 
 # junta as bases novamente
 eleicao_2022 <- rbind(t1, t2)
+table(eleicao_2022$passe_livre, useNA = 'always')
+
+# replace NAs with 0
+eleicao_2022[is.na(passe_livre), passe_livre := 0]
+
+table(eleicao_2022$passe_livre, useNA = 'always')
+#>       0      1   <NA> 
+#>  655349 285583      0 
 
 
-summary(eleicao_2022$passe_livre)
-#>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#> 0.0000  0.0000  0.0000  0.3035  1.0000  1.0000 
+
 
 
 
@@ -163,8 +164,8 @@ summary(eleicao_2022$votos_total)
 
 # salvar arquivo final----------------------------------------------------------
 # seleciona apenas variáveis que serão usadas
-my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
-            "ANO_ELEICAO","NR_TURNO", "SG_UF","CD_CARGO",
+my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NM_LOCAL_VOTACAO", "NR_SECAO",
+            "ANO_ELEICAO","NR_TURNO", "SG_UF", "NM_MUNICIPIO", "CD_CARGO",
             
             "code_muni",
             
@@ -179,9 +180,9 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
             
             "dist_sede", "closest_dist_any", "closest_dist",
             "num_0500", "num_1000","num_3000",
-            "num_5000","num_10000",
+            "num_5000","num_10000", 'zone',
             "votos_lula", "votos_jair", "votos_total",
-            "dummy_pt", "t", "passe_livre","PIB_PC")
+            "dummy_pt", "passe_livre","PIB_PC")
 
 eleicao_2022 <- eleicao_2022[, ..my_var]
 
