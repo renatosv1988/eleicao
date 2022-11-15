@@ -1,7 +1,4 @@
 
-
-
-
 library(data.table)
 library(dplyr)
 library(fixest)
@@ -252,9 +249,34 @@ step2 <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2
 summary(step2)
 
 
+modelsummary::modelsummary(step2, stars = T)
+
+
+temp_df <- df_sections[, .(mean_value=mean(comparecimento_2022, na.rm=T),
+                           p25 = quantile(comparecimento_2022,0.25, na.rm=T),
+                           p75 = quantile(comparecimento_2022,0.75, na.rm=T)), by=.(NR_TURNO, passe_livre_2)]
 
 
 
+ggplot() +
+ geom_line(data=temp_df, aes(x=NR_TURNO, y=mean_value, color=factor(passe_livre_2)),
+           position = position_dodge2(width = 1)) +
+ geom_pointrange(data=temp_df,
+                 position = position_dodge2(width = 1),
+                 show.legend = FALSE,
+                 aes(x=NR_TURNO, y=mean_value, color=factor(passe_livre_2),
+                     ymin = p25,
+                     ymax = p75)) +
+ #  facet_wrap(~variable) +
+ labs(y='Mobility change\nagainst baseline', x = 'Sunday', color='Round with\nfree transit') +
+ scale_x_date( date_labels =  "%d %b", breaks =  sundays) +
+ scale_y_continuous(expand = c(0,0)) +
+ annotate("rect", xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
+          ymin = min(temp_df2$p25 - 3, na.rm=T), ymax = max(temp_df2$p75, na.rm=T), alpha = .1) +
+ # scale_color_npg() +
+ #scale_color_uchicago() +
+ scale_color_jama() +
+ theme_classic()
 
 
 # Model 2. by REGIAO ------------------------------------------

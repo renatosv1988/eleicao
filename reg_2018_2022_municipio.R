@@ -157,12 +157,12 @@ df_round1 <- df[NR_TURNO==1,]
 df_round1 <- left_join(df_round1, df_2018_r1[, .(code_muni, ipw)], by = 'code_muni')
 
 # reg
-step2_r2 <- fixest::feols(comparecimento~ANO_ELEICAO + passe_livre_t1 + ANO_ELEICAO:passe_livre_t1, 
+step2_r1 <- fixest::feols(comparecimento~ANO_ELEICAO + passe_livre_t1 + ANO_ELEICAO:passe_livre_t1, 
                        fixef = 'code_muni', 
                        cluster = 'code_muni',
                        weights = ~ipw,
                        data = df_round1)
-summary(step2_r2)
+summary(step2_r1)
 
 
 df_round1[, mean(comparecimento), by = .(passe_livre_t1, ANO_ELEICAO)]
@@ -170,7 +170,29 @@ df_round1[, mean(comparecimento), by = .(passe_livre_t1, ANO_ELEICAO)]
 
 
 
+modelsummary::modelsummary(step2_r1, stars = T)
 
+
+temp_df <- df_round1[, .(mean_value=mean(comparecimento, na.rm=T),
+                           p25 = quantile(comparecimento,0.25, na.rm=T),
+                           p75 = quantile(comparecimento,0.75, na.rm=T)), by=.(ANO_ELEICAO, passe_livre_t1)]
+
+ggplot() +
+ geom_line(data=temp_df, aes(x=ANO_ELEICAO, y=mean_value, color=factor(passe_livre_t1)),
+           position = position_dodge2(width = 1)) +
+ geom_pointrange(data=temp_df,
+                 position = position_dodge2(width = 1),
+                 show.legend = FALSE,
+                 aes(x=ANO_ELEICAO, y=mean_value, color=factor(passe_livre_t1),
+                     ymin = p25,
+                     ymax = p75)) +
+ labs(y='Voter turnout', x = '1st round', color='Free transit') +
+ scale_x_continuous( breaks =  c(2018, 2022)) +
+ scale_y_continuous(labels = scales::percent) +
+  scale_color_npg() +
+ #scale_color_uchicago() +
+ # scale_color_jama() +
+ theme_classic()
 
 
 
@@ -231,13 +253,33 @@ step2_r2 <- fixest::feols(comparecimento~ANO_ELEICAO + passe_livre_t2 + ANO_ELEI
 summary(step2_r2)
 
 
-df_round2[, mean(comparecimento), by = .(passe_livre_t2, ANO_ELEICAO)]
 
+# output model table
+model_list <- list(step2_r1,  step2_r2)
+names(model_list) <- c('round_1', 'round_2')
+modelsummary::modelsummary(model_list, stars = T)
 
+# plot
+temp_df <- df_round2[, .(mean_value=mean(comparecimento, na.rm=T),
+                         p25 = quantile(comparecimento,0.25, na.rm=T),
+                         p75 = quantile(comparecimento,0.75, na.rm=T)), by=.(ANO_ELEICAO, passe_livre_t2)]
 
-
-
-
+ggplot() +
+ geom_line(data=temp_df, aes(x=ANO_ELEICAO, y=mean_value, color=factor(passe_livre_t2)),
+           position = position_dodge2(width = 1)) +
+ geom_pointrange(data=temp_df,
+                 position = position_dodge2(width = 1),
+                 show.legend = FALSE,
+                 aes(x=ANO_ELEICAO, y=mean_value, color=factor(passe_livre_t2),
+                     ymin = p25,
+                     ymax = p75)) +
+ labs(y='Voter turnout', x = '2nd round', color='Free transit') +
+ scale_x_continuous( breaks =  c(2018, 2022)) +
+ scale_y_continuous(labels = scales::percent) +
+ scale_color_npg() +
+ #scale_color_uchicago() +
+ # scale_color_jama() +
+ theme_classic()
 
 
 
@@ -351,6 +393,7 @@ ggplot() +
  theme_classic()
 
 
+modelsummary::modelsummary(r1, stars = T)
 
 
 

@@ -2,6 +2,7 @@ library(ggsci)
 library(ggplot2)
 library(stringr)
 library(data.table)
+library(modelsummary)
 
 
 # Read data -------------
@@ -117,5 +118,4 @@ summary(r1)
 
 
 
-
-
+modelsummary::modelsummary(r1, stars = T)
