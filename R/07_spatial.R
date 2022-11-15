@@ -523,42 +523,100 @@ summary(df3$dist_sede)
 
 summary(df3$num_1000)
 
+
+
+
+
+
+
+
+
+
+
+
+##### determine section in urban and rural areas -------------------------------
+
+# library(data.table)
+# library(mapview)
+# library(leafgl)
+# library(sf)
+# mapviewOptions(platform = 'leafgl')
+# 
+# 
+# read data
+tracts <- geobr::read_census_tract(code_tract = 'all', simplified = FALSE, year=2010)
+tracts <- dplyr::select(tracts, 'code_tract',  'zone', 'code_muni', 'name_muni')
+tracts_urban <- subset(tracts, zone == 'URBANO')
+
+# sections
+df_sections <- fread('../../data/spatial/electoral_sections_spatial.csv')
+df_sections[, id_local_votacao := paste(CD_MUNICIPIO, NR_ZONA, NR_LOCAL_VOTACAO)]
+
+df_place <- df_sections[, .(code_muni, id_local_votacao, lon, lat)] 
+df_place <- unique(df_place)
+
+sf_place <- sfheaders::sf_point(df_place, x='lon', y='lat', keep = T)
+st_crs(sf_place) <- 4674
+
+
+
+get_urban <- function(c_muni){ # c_muni <- df$code_muni[1]
+ 
+ # subset
+ temp_tracts <- subset(tracts_urban ,  code_muni == c_muni)
+ temp_tracts <- sf::st_make_valid(temp_tracts)
+ temp_sf <- subset(sf_place ,  code_muni == c_muni)
+ 
+ inter_sf <- st_join(temp_sf, temp_tracts)
+ inter_df <- sfheaders::sf_to_df(inter_sf, fill = T)
+ return(inter_df)
+ }
+
+tictoc::tic()
+# parallel
+plan(multisession)
+
+sf_place_urban <- furrr::future_map(.x = unique(sf_place$code_muni), 
+                         .f = get_urban, 
+                         .progress = TRUE) |> rbindlist()
+
+tictoc::toc()
+#> 191.32 sec elapsed
+
+
+# Format data
+head(sf_place_urban)
+
+sf_place_urban[, zone := fifelse(zone=='URBANO', 'urban', 'rural', na='rural')]
+table(sf_place_urban$zone)
+
+# bring zone info to sections
+df_sections[sf_place_urban, on='id_local_votacao', zone := i.zone]
+head(df_sections)
+
+
+
+
 # save output --------------------------------------------------
 
-fwrite(df3, '../../data/spatial/electoral_sections_spatial.csv')
+fwrite(df_sections, '../../data/spatial/electoral_sections_spatial.csv')
+
+hist(df_sections$closest_dist)
+hist(df_sections$dist_sede)
+hist(df_sections$num_0500)
+hist(df_sections$num_1000)
+hist(df_sections$num_3000)
+hist(df_sections$num_5000)
+hist(df_sections$num_10000)
 
 
+summary(df_sections$closest_dist)
+summary(df_sections$dist_sede)
+summary(df_sections$num_0500)
+summary(df_sections$num_1000)
+summary(df_sections$num_3000)
+summary(df_sections$num_5000)
+summary(df_sections$num_10000)
+summary(df_sections$lat)
 
-hist(df3$closest_dist)
-hist(df3$dist_sede)
-hist(df3$num_0500)
-hist(df3$num_1000)
-hist(df3$num_3000)
-hist(df3$num_5000)
-hist(df3$num_10000)
-
-
-summary(df3$closest_dist)
-summary(df3$dist_sede)
-summary(df3$num_0500)
-summary(df3$num_1000)
-summary(df3$num_3000)
-summary(df3$num_5000)
-summary(df3$num_10000)
-summary(df3$lat)
-
-
-
-
-
-library(data.table)
-library(mapview)
-library(leafgl)
-library(sf)
-mapviewOptions(platform = 'leafgl')
-
-df3 <- fread('../../data/spatial/electoral_sections_spatial.csv')
-sss <- sfheaders::sf_point(df3, 'x', 'y', keep = T)
-st_crs(sss) <- 4674
-
-mapview(sss)
+table(df_sections$zone, useNA = 'always')
