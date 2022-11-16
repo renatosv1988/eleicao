@@ -164,19 +164,27 @@ summary(eleicao_2022$votos_total)
 # adicionar variação de comparecimento por municipio em 2018 -------------------
 
 # separar por turno
-T1 <- SE18[SE18$NR_TURNO==1,]
-T2 <- SE18[SE18$NR_TURNO==2,]
+T1 <- SE18[NR_TURNO==1,]
+T2 <- SE18[NR_TURNO==2,]
+
 # calcular comparecimento por municipio por turno
-M1 <- T1[,.(comparecimento_t1= sum(QT_COMPARECIMENTO),
-            aptos_t1=sum(QT_APTOS)),by=CD_MUNICIPIO]
-M2 <- T2[,.(comparecimento_t2= sum(QT_COMPARECIMENTO),
-            aptos_t2=sum(QT_APTOS)),by=CD_MUNICIPIO]
+M1 <- T1[,.(comparecimento_t1 = sum(QT_COMPARECIMENTO),
+            aptos_t1 = sum(QT_APTOS)),
+         by=CD_MUNICIPIO]
+
+M2 <- T2[,.(comparecimento_t2 = sum(QT_COMPARECIMENTO),
+            aptos_t2 = sum(QT_APTOS)),
+         by=CD_MUNICIPIO]
+
 M1$comp_t1 <- M1$comparecimento_t1/M1$aptos_t1
 M2$comp_t2 <- M2$comparecimento_t2/M2$aptos_t2
+
 # juntar turnos
 MM <- merge(M1, M2[,c("CD_MUNICIPIO","comp_t2")], by="CD_MUNICIPIO", all.x = T)
+
 # calcular variação
-MM$variacao_comparecimento_2018 <- MM$comp_t2-MM$comp_t1
+MM$variacao_comparecimento_2018 <- MM$comp_t2 - MM$comp_t1
+
 # merge na base principal
 eleicao_2022 <- merge(eleicao_2022,
                       MM[,c("CD_MUNICIPIO","variacao_comparecimento_2018")],
