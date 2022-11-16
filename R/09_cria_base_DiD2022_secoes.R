@@ -73,11 +73,15 @@ perfil[, educacao_1 := educ_prim / qt_perfil ]
 perfil[, idade_16_17 := idade_16_17 / qt_perfil ]
 perfil[, idade_18_24 := idade_18_24 / qt_perfil ]
 perfil[, idade_60M := idade_60M / qt_perfil ]
+perfil[, biometria := qt_biometria / qt_perfil ]
+
 
 summary(perfil$educacao_1)
+summary(perfil$biometria)
 
 eleicao_2022 <- merge(eleicao_2022, perfil[,c("id_secao","mulheres","educacao_1",
-                                              "idade_16_17","idade_18_24","idade_60M")],
+                                              "idade_16_17","idade_18_24","idade_60M", 
+                                              "biometria", "qt_biometria")],
                       by="id_secao", all.x = T)
 
 summary(eleicao_2022$educacao_1)
@@ -204,6 +208,7 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NM_LOCAL_VOTACAO", "NR_SECAO
             "gov_2t",
             "mulheres","educacao_1",
             "idade_16_17","idade_18_24","idade_60M",
+            "biometria", "qt_biometria",
             "comparecimento_2022","abstencao_2022",
             
             "variacao_comparecimento_2018",
@@ -217,5 +222,4 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NM_LOCAL_VOTACAO", "NR_SECAO
 eleicao_2022 <- eleicao_2022[, ..my_var]
 
 fwrite(eleicao_2022, "../../data/base_DiD2022_secoes.csv")
-
 

@@ -15,6 +15,7 @@ library(ggplot2)
 library(purrr)
 library(modelsummary)
 library(ggplot2)
+library(ggsci)
 
 options(scipen = 999)
 
@@ -216,6 +217,7 @@ setcolorder(b, 'variable')
 
 
 # ipw balancing ----------------------------------------------------------------------
+# 6666 incluir  name_region ??? melhora ipw
 
 step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + votos_jair_muni_p + gov_2t , # + mean_dens_1000, 
              family = binomial(link = 'logit'),

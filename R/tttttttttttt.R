@@ -1,3 +1,5 @@
+# remover municipios que SEMPRE tiveram passe livre, mesmo antes das eleicoes
+# isso só deve afetar analise do 1o turno, mas mesmo assim importa
 
 library(data.table)
 library(dplyr)
@@ -14,6 +16,12 @@ options(scipen = 999)
 # read data ----------------------------------------------------------------------
 
 BD <- fread("../../data/base_DiD2022_secoes.csv")
+
+
+
+# percentage of voters living in cities with passe livre
+BD[NR_TURNO==2 & passe_livre==1, sum(QT_APTOS)] / BD[NR_TURNO==2, sum(QT_APTOS)]
+#> 0.4780362
 
 
 
@@ -150,17 +158,20 @@ table(df_sections$name_region, df_sections$passe_livre_2)
 
 # aggregate variables at muni level
 df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T),
-                   QT_APTOS_log = log(sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)),
-                   votos_jair_muni_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_total[which(NR_TURNO==1)]),
-                   mean_dist = mean(dist_sede, na.rm=T),
-                   mean_dens_1000 = mean(num_1000, na.rm=T),
-                   educacao_1 = weighted.mean(x=educacao_1, w=QT_APTOS, na.rm=T),
-                   SG_UF = SG_UF[1L],
-                   name_region = name_region[1L],
-                   gov_2t = max(gov_2t),
-                   pib_log = log(PIB_PC)[1L],
-                   passe_livre_2 = max(passe_livre_2)), 
-               by=code_muni]
+                           QT_APTOS_log = log(sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)),
+                           votos_jair_muni_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_total[which(NR_TURNO==1)]),
+                           mean_dist = mean(dist_sede, na.rm=T),
+                           mean_dens_1000 = mean(num_1000, na.rm=T),
+                           educacao_1 = weighted.mean(x=educacao_1, w=QT_APTOS, na.rm=T),
+                           SG_UF = SG_UF[1L],
+                           name_region = name_region[1L], 
+                           variacao_comparecimento_2018 = variacao_comparecimento_2018[1L],
+                           gov_2t = max(gov_2t),
+                           pib_log = log(PIB_PC)[1L],
+                           passe_livre = max(passe_livre), 
+                           passe_livre_1 = max(passe_livre_1), 
+                           passe_livre_2 = max(passe_livre_2)),
+                   by=code_muni]
 
 
 head(df_muni)
@@ -205,7 +216,7 @@ setcolorder(b, 'variable')
 
 # ipw balancing ----------------------------------------------------------------------
 
-step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + votos_jair_muni_p + gov_2t , # + mean_dens_1000, 
+step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log +votos_jair_muni_p + gov_2t  , # + mean_dens_1000, 
              family = binomial(link = 'logit'),
              data = df_muni)
 
@@ -284,6 +295,15 @@ ggplot() +
  theme_classic()
 
 
+# sugestao renato
+dd1x <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2
+                      + turno2_dummy:variacao_comparecimento_2018, 
+                      fixef = 'id_secao', 
+                      cluster = 'code_muni',
+                      weights = ~ipw,
+                      data = df_sections)
+
+etable(dd1x)
 
 
 

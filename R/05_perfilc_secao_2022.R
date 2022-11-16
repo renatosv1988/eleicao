@@ -36,7 +36,8 @@ for(i in 1:27){ # i <- 1
   idade_16_17 = sum(idade_16_17),
   idade_18_24 = sum(idade_18_24),
   idade_60M = sum(idade_60M),
-  qt_perfil = sum(QT_ELEITORES_PERFIL)), 
+  qt_perfil = sum(QT_ELEITORES_PERFIL),
+  qt_biometria = sum(QT_ELEITORES_BIOMETRIA)), 
   by = .(CD_MUNICIPIO, NR_ZONA, NR_SECAO, id_secao)]
  
  cat(my_uf[i], " ")
