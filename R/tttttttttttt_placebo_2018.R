@@ -23,7 +23,7 @@ library(purrr)
 options(scipen = 999)
 
 # ler base de eleições
-BD <- fread("../../data/base_DiD2022_secoes.csv")
+BD <- fread("../../data/base_DiD2018_secoes.csv")
 
 
 # convert selected columns to log
@@ -64,7 +64,7 @@ summary(df2$comparecimento_2022)
 # modelo 1 ----------------------------------------------------------------------
 # average city effects (no inverse probability weighting)
 
-dd1 <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+dd1 <- fixest::feols(comparecimento_2018~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
              fixef = 'id_secao', 
              cluster = 'code_muni',
              data = df2)
@@ -109,7 +109,7 @@ df_muni <- df2[NR_TURNO==2, .(QT_APTOS = sum(QT_APTOS, na.rm=T),
                               passe_livre_2 = max(passe_livre_2)), 
                by=code_muni]
 
-# df_muni <- na.omit(df_muni)     
+df_muni <- na.omit(df_muni)     
 
 lm(passe_livre_2 ~ gov_2t + log(QT_APTOS) + votos_jair + pib_log + mean_dens,
              data = df_muni) |> summary()
@@ -128,7 +128,7 @@ summary(df_muni$ipw)
 df2[df_muni, on='code_muni', ipw := i.ipw]
 
 # reg
-step2 <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+step2 <- fixest::feols(comparecimento_2018~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                      fixef = 'id_secao', 
                      cluster = 'code_muni',
                      weights = ~ipw,
@@ -152,6 +152,7 @@ summary(step2)
 # average number of voters between rounds in each muni 
 df2[, QT_APTOS_muni := sum(QT_APTOS)/2, by=code_muni]
 
+df2 <- na.omit(df2)
 lm(passe_livre_2 ~ gov_2t + log(QT_APTOS_muni) + votos_jair + pib_log, 
    data = df2) |> summary()
 
@@ -160,6 +161,7 @@ step1 <- glm(passe_livre_2 ~ log(QT_APTOS_muni) + votos_jair + pib_log,
              data = df2)
 
 summary(step1)
+
 df2$ipw <- 1 / fitted(step1)
 head(df2)
 
@@ -168,7 +170,7 @@ summary(df2$ipw)
 
 
 # reg
-step2 <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+step2 <- fixest::feols(comparecimento_2018~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                        fixef = 'id_secao', 
                        cluster = 'code_muni',
                        weights = ~ipw,
@@ -194,7 +196,7 @@ get_reg_edu <- function(e){  # e = .4
  temp_df <- df2[ educacao_1_cat == e]
  
  
- step2 <- fixest::feols(comparecimento_2022~turno2_dummy + closest_dist + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2 <- fixest::feols(comparecimento_2018~turno2_dummy + closest_dist + passe_livre_2 + turno2_dummy:passe_livre_2, 
                         fixef = 'id_secao', 
                         cluster = 'code_muni',
                         weights = ~ipw,
@@ -252,7 +254,7 @@ reg_group_dist <- function(i){  # i =50
  temp_df <- df2[ num_1000_cat == i]
  
  
- step2 <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2 <- fixest::feols(comparecimento_2018~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                         fixef = 'id_secao', 
                         cluster = 'code_muni',
                         weights = ~ipw,
@@ -303,14 +305,14 @@ reg_group_dist_edu <- function(i){  # i =50 i = Inf
  temp_df <- df2[ num_1000_cat == i]
  
  
- step2_low <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2_low <- fixest::feols(comparecimento_2018~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                         fixef = 'id_secao', 
                         cluster = 'code_muni',
                         weights = ~ipw,
                         data = subset(temp_df, educacao_1 >=  0.5)
                         )
  
- step2_high <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2_high <- fixest::feols(comparecimento_2018~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                             fixef = 'id_secao', 
                             cluster = 'code_muni',
                             weights = ~ipw,
@@ -366,14 +368,14 @@ reg_group_edu_dist <- function(e, d){  # e = .5 ; d = 100
  temp_df <- df2[ educacao_1_cat == e]
  
  
- step2_above <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2_above <- fixest::feols(comparecimento_2018~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                             fixef = 'id_secao', 
                             cluster = 'id_secao',
                             weights = ~ipw,
                             data = subset(temp_df, num_1000 >=  d)
                             )
  
- step2_below <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2_below <- fixest::feols(comparecimento_2018~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                              fixef = 'id_secao', 
                              cluster = 'id_secao',
                              weights = ~ipw,
@@ -435,7 +437,7 @@ head(df2)
 # average number of voters between rounds in each muni 
 df2[, QT_APTOS_muni := sum(QT_APTOS)/2, by=code_muni]
 
-output_drdid <- drdid( yname = 'comparecimento_2022', 
+output_drdid <- drdid( yname = 'comparecimento_2018', 
                   tname = 'turno2_dummy', 
                   idname = 'id',
                   dname = 'passe_livre_2', 
@@ -465,7 +467,7 @@ head(df2)
 # average number of voters between rounds in each muni 
 df2[, QT_APTOS_muni := sum(QT_APTOS)/2, by=code_muni]
 
-output_drdid <- drdid(yname = 'comparecimento_2022', 
+output_drdid <- drdid(yname = 'comparecimento_2018', 
                        tname = 'turno2_dummy', 
                        idname = 'id',
                        dname = 'passe_livre_2', 
