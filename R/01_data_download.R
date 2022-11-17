@@ -90,7 +90,7 @@ unzip(paste0(dir_votacao,"/votacao_2018.zip"), exdir = dir_votacao)
 
 
 
-#### seções --------------------------------------------------
+#### secoes --------------------------------------------------
 #' Detalhe da apuração por seção eleitoral
 #' https://dadosabertos.tse.jus.br/dataset/resultados-2022
 
@@ -223,7 +223,7 @@ for(i in 1:27){# i <- 26
  cat(my_uf[i], " ")
 }
 
-# onibus São Paulo -------------------------------------------------------------
+# onibus Sao Paulo -------------------------------------------------------------
 dir_sp <- '../../data_raw/sp'
 dir.create(dir_sp)
 
