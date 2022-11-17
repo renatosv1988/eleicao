@@ -145,6 +145,10 @@ summary(eleicao_2022$PIB_PC)
 t1 <- subset(eleicao_2022, NR_TURNO==1)
 t2 <- subset(eleicao_2022, NR_TURNO==2)
 
+# temp 6666
+votos_T1 <- votos_T1[, -c('QT_APTOS','QT_ABSTENCOES','QT_COMPARECIMENTO')]
+votos_T2 <- votos_T2[, -c('QT_APTOS','QT_ABSTENCOES','QT_COMPARECIMENTO')]
+
 # merge data
 t1 <- merge(t1, votos_T1, by="id_secao", all.x = T)
 t2 <- merge(t2, votos_T2, by="id_secao", all.x = T)
@@ -165,6 +169,8 @@ summary(eleicao_2022$votos_total)
 #> Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #> 10.0   228.0   269.0   262.6   302.0   508.0 
 
+
+summary(eleicao_2022$votos_validos)
 
 # adicionar variação de comparecimento por municipio em 2018 -------------------
 # separar por turno
@@ -231,12 +237,13 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NM_LOCAL_VOTACAO", "NR_SECAO
             "comparecimento_2018",
             
             "variacao_comparecimento_2018",
-            
+             
             "dist_sede", "closest_dist_any", "closest_dist",
             "num_0500", "num_1000","num_3000",
             "num_5000","num_10000",
             'zone',
             "votos_lula", "votos_jair", "votos_total",
+            "votos_nulo", "votos_branco", "votos_validos",
             "dummy_pt", "passe_livre","PIB_PC")
 
 eleicao_2022 <- eleicao_2022[, ..my_var]

@@ -1,7 +1,4 @@
-
 #' renato concertar script q gera base de 2018 - 2022
-
-
 
 library(data.table)
 library(dplyr)
@@ -53,11 +50,9 @@ df_sections[, turno2_dummy := fifelse(NR_TURNO==2, 1, 0)]
 
 # recode variables ----------------------------------------------------------------------
 
-##### votos Lula sobre Votos total ? OU           (hj a gente faz isso aqui)
-##### votos Lula sobre votos validos ???? 66666666
-
-df_sections[, votos_lula_p := sum(votos_lula) / sum(votos_total), by = .(id_secao, NR_TURNO)]
-summary(df_sections$votos_lula_p)
+df_sections[, votos_lula_total_p := sum(votos_lula) / sum(votos_total), by = .(id_secao, NR_TURNO)]
+df_sections[, votos_lula_validos_p := sum(votos_lula) / sum(votos_validos), by = .(id_secao, NR_TURNO)]
+summary(df_sections$votos_lula_validos_p)
 
  # # create unique id for voting place
 # df_sections[, id_secao := paste(code_muni, NR_ZONA, NR_LOCAL_VOTACAO)]
@@ -143,15 +138,20 @@ df_sections[, num_1000_decile := cut(num_1000,
                                      ordered_result = TRUE,
                                      labels = 1:10) ]
 
+### rafa 66666 reg hete
+# density quantiles
+df_sections[, idade_60M_decile := cut(idade_60M,
+                                     breaks = quantile(idade_60M, na.rm=T,
+                                                       probs = seq(0, 1 , by = .1)),
+                                     include.lowest = TRUE,
+                                     ordered_result = TRUE,
+                                     labels = 1:10) ]
+
+
 
 # add regions
 regions <- geobr::read_region()
 regions$geom <- NULL
-
-# # add region to place data
-# df_place[, code_region := substring(code_muni, 1, 1) |> as.numeric() ]
-# df_place <- left_join(df_place, regions, by=c('code_region'))
-# table(df_place$name_region, df_place$passe_livre_2)
 
 # add region to section data
 df_sections[, code_region := substring(code_muni, 1, 1) |> as.numeric() ]
@@ -164,7 +164,8 @@ df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)
                            QT_APTOS_log = log(sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)),
                            biometria = weighted.mean(x=biometria, w=QT_APTOS, na.rm=T),
                            qt_biometria = sum(qt_biometria[which(NR_TURNO==2)], na.rm=T),
-                           votos_jair_muni_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_total[which(NR_TURNO==1)]),
+                           votos_jair_muni_total_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_total[which(NR_TURNO==1)]),
+                           votos_jair_muni_validos_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_validos[which(NR_TURNO==1)]),
                            mean_dist = mean(dist_sede, na.rm=T),
                            mean_dens_1000 = mean(num_1000, na.rm=T),
                            educacao_1 = weighted.mean(x=educacao_1, w=QT_APTOS, na.rm=T),
@@ -197,7 +198,7 @@ df_sections[, table(passe_livre_2, turno2_dummy)]
 # balancing before ipw 
 a <- df_muni[,   .(QT_APTOS          = weighted.mean(x=QT_APTOS),
                    QT_APTOS_log      = weighted.mean(x=QT_APTOS_log),
-                   votos_jair_muni_p = weighted.mean(x=votos_jair_muni_p),
+                   votos_jair_muni_total_p = weighted.mean(x=votos_jair_muni_total_p),
                    mean_dist         = weighted.mean(x=mean_dist, na.rm=T),
                    mean_dens_1000    = weighted.mean(x=mean_dens_1000),
                    educacao_1        = weighted.mean(x=educacao_1),
@@ -222,11 +223,12 @@ setcolorder(b, 'variable')
 
 # df_muni$biometria
 # df_muni$variacao_comparecimento_2018
+# 666 dropa prsidios em 2018 RAFA
 
-
-step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + biometria + votos_jair_muni_p + gov_2t , # + mean_dens_1000, 
+step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + name_region + variacao_comparecimento_2018 + biometria + votos_jair_muni_validos_p + gov_2t , # + mean_dens_1000, 
              family = binomial(link = 'logit'),
              data = df_muni)
+
 
 summary(step1)
 df_muni[, ipw := (passe_livre_2 / fitted(step1)) + ((1 - passe_livre_2) / ( 1- fitted(step1)))]
@@ -239,7 +241,7 @@ summary(df_muni$ipw)
 # balancing AFTER ipw 
 a <- df_muni[,   .(QT_APTOS          = weighted.mean(x=QT_APTOS, w = ipw),
                    QT_APTOS_log      = weighted.mean(x=QT_APTOS_log, w = ipw),
-                   votos_jair_muni_p = weighted.mean(x=votos_jair_muni_p, w = ipw),
+                   votos_jair_muni_total_p = weighted.mean(x=votos_jair_muni_total_p),
                    mean_dist         = weighted.mean(x=mean_dist, w = ipw, na.rm=T),
                    mean_dens_1000    = weighted.mean(x=mean_dens_1000, w = ipw),
                    educacao_1        = weighted.mean(x=educacao_1, w = ipw),
@@ -268,7 +270,7 @@ setcolorder(c, 'variable')
 setDT(df_sections)[df_muni, on='code_muni', ipw := i.ipw]
 
 # reg
-step2 <- fixest::feols(votos_lula_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+step2 <- fixest::feols(votos_lula_validos_p ~ turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                        fixef = 'id_secao', 
                        cluster = 'code_muni',
                        weights = ~ipw,
@@ -280,9 +282,9 @@ modelsummary::modelsummary(step2, stars = T)
 
 
 
-temp_df <- df_sections[, .(mean_value=mean(votos_lula_p, na.rm=T),
-                           p25 = quantile(votos_lula_p,0.25, na.rm=T),
-                           p75 = quantile(votos_lula_p,0.75, na.rm=T)), by=.(NR_TURNO, passe_livre_2)]
+temp_df <- df_sections[, .(mean_value=mean(votos_lula_validos_p, na.rm=T),
+                           p25 = quantile(votos_lula_validos_p,0.25, na.rm=T),
+                           p75 = quantile(votos_lula_validos_p,0.75, na.rm=T)), by=.(NR_TURNO, passe_livre_2)]
 
 
 
@@ -354,7 +356,7 @@ reg_region <- function(r){  # r = 'Norte'
  temp_df_section <- df_sections[ name_region == r, ]
  
  # calculate ipw
- temp_step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + gov_2t, # + mean_dens_1000, 
+ temp_step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + variacao_comparecimento_2018 + biometria + votos_jair_muni_validos_p + gov_2t, # + mean_dens_1000, 
                    family = binomial(link = 'logit'),
                    data = temp_df_muni)
  
@@ -369,7 +371,7 @@ reg_region <- function(r){  # r = 'Norte'
  setDT(temp_df_section)[temp_df_muni, on='code_muni', ipw := i.ipw]
  
  # reg
- step2 <- fixest::feols(votos_lula_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2 <- fixest::feols(votos_lula_validos_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                         fixef = 'id_secao', 
                         cluster = 'code_muni',
                         weights = ~ipw,
@@ -413,7 +415,7 @@ reg_edu <- function(e){  # e = '0.4'
  temp_df_section <- df_sections[ educacao_1_decile == e, ]
  
  # reg
- step2 <- fixest::feols(votos_lula_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2 <- fixest::feols(votos_lula_validos_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                         fixef = 'id_secao', 
                         cluster = 'code_muni',
                         weights = ~ipw,
@@ -458,7 +460,7 @@ reg_dens <- function(i){  # i = 50
  temp_df <- df_sections[ num_1000_decile == i]
  
  
- step2 <- fixest::feols(votos_lula_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2 <- fixest::feols(votos_lula_validos_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                         fixef = 'id_secao', 
                         cluster = 'code_muni',
                         weights = ~ipw,
@@ -506,14 +508,14 @@ reg_group_dist_edu <- function(i){  # i = '60' i = Inf
  message(i)
  temp_df <- df_sections[ num_1000_decile == i & !is.na(ses)]
  
- step2_low <- fixest::feols(votos_lula_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2_low <- fixest::feols(votos_lula_validos_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                             fixef = 'id_secao', 
                             cluster = 'code_muni',
                             weights = ~ipw,
                             data = subset(temp_df, ses == 'low')
  )
  
- step2_high <- fixest::feols(votos_lula_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2_high <- fixest::feols(votos_lula_validos_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                              fixef = 'id_secao', 
                              cluster = 'code_muni',
                              weights = ~ipw,
@@ -570,14 +572,14 @@ reg_group_edu_dist <- function(e, d){  # e = .8 ; d = 60
  temp_df <- df_sections[ educacao_1_cat == e]
  
  
- step2_above <- fixest::feols(votos_lula_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2_above <- fixest::feols(votos_lula_validos_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                               fixef = 'id_secao', 
                               cluster = 'code_muni',
                               weights = ~ipw,
                               data = subset(temp_df, num_1000_cat ==  d)
  )
  
- step2_below <- fixest::feols(votos_lula_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2_below <- fixest::feols(votos_lula_validos_p~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                               fixef = 'id_secao', 
                               cluster = 'code_muni',
                               weights = ~ipw,

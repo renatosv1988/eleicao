@@ -36,6 +36,10 @@ tictoc::tic()
  # ler dados das urnas
  urnas_T1 <- fread( path_csv_T1 , sep = ";", encoding = "Latin-1")
  urnas_T2 <- fread( path_csv_T2, sep = ";", encoding = "Latin-1")
+
+ # remove temp files
+ unlink(temp_dir_1, recursive = T)
+ unlink(temp_dir_2, recursive = T)
  gc()
  # urnas_T1 <- read.csv(unz(path_zip_T1, path_csv_T1), sep = ";", encoding = "Latin-1")
  # urnas_T2 <- read.csv(unz(path_zip_T2, path_csv_T2), sep = ";", encoding = "Latin-1")
@@ -70,10 +74,11 @@ tictoc::tic()
                           votos_nulo = sum(votos_nulo),
                           votos_branco = sum(votos_branco),
                           votos_validos = sum(votos_validos),
-                          votos_total = sum(QT_VOTOS),
-                          QT_APTOS = QT_APTOS[1L],
-                          QT_ABSTENCOES = QT_ABSTENCOES[1L],
-                          QT_COMPARECIMENTO = QT_COMPARECIMENTO[1L]), 
+                          votos_total = sum(QT_VOTOS)
+                          # QT_APTOS = QT_APTOS[1L],
+                          # QT_ABSTENCOES = QT_ABSTENCOES[1L],
+                          # QT_COMPARECIMENTO = QT_COMPARECIMENTO[1L]
+                          ), 
                       by = .(id_secao)]
  
  votos_T2 <- urnas_T2[, .(votos_lula = sum(votos_lula),
@@ -81,10 +86,11 @@ tictoc::tic()
                           votos_nulo = sum(votos_nulo),
                           votos_branco = sum(votos_branco),
                           votos_validos = sum(votos_validos),
-                          votos_total = sum(QT_VOTOS),
-                          QT_APTOS = QT_APTOS[1L],
-                          QT_ABSTENCOES = QT_ABSTENCOES[1L],
-                          QT_COMPARECIMENTO = QT_COMPARECIMENTO[1L]), 
+                          votos_total = sum(QT_VOTOS)
+                          # QT_APTOS = QT_APTOS[1L],
+                          # QT_ABSTENCOES = QT_ABSTENCOES[1L],
+                          # QT_COMPARECIMENTO = QT_COMPARECIMENTO[1L]
+                          ),
                       by = .(id_secao)]
  
 
@@ -104,3 +110,43 @@ votos_T2 <- data.table::rbindlist(lista_T2)
 dir.create('../../data/votes')
 fwrite(votos_T1, '../../data/votes/votos_T1.csv')
 fwrite(votos_T2, '../../data/votes/votos_T2.csv')
+
+
+
+
+
+# aptos
+aptos <- sum(votos_T2$QT_APTOS)
+587765
+
+# comparecimento
+comparecimento <- sum(votos_T2$QT_COMPARECIMENTO)
+420760
+
+
+
+# validos
+validos <- sum(votos_T2$votos_validos)
+409316
+
+# branco
+branco <- sum(votos_T2$votos_branco)
+4722
+
+# nulo
+nulo <- sum(votos_T2$votos_nulo)
+6722
+
+# total
+total <- sum(votos_T2$votos_total)
+420760
+
+
+# check 1
+total == comparecimento
+
+# check 2
+validos == total - (nulo + branco)
+
+
+
