@@ -1,9 +1,5 @@
 
 #' renato concertar script q gera base de 2018 - 2022
-#' 
-#' rafa quebrar densidade por quantil
-#' rafa setor urbano
-
 
 
 
@@ -57,6 +53,8 @@ df_sections[, turno2_dummy := fifelse(NR_TURNO==2, 1, 0)]
 
 # recode variables ----------------------------------------------------------------------
 
+##### votos Lula sobre Votos total ? OU           (hj a gente faz isso aqui)
+##### votos Lula sobre votos validos ???? 66666666
 
 df_sections[, votos_lula_p := sum(votos_lula) / sum(votos_total), by = .(id_secao, NR_TURNO)]
 summary(df_sections$votos_lula_p)
@@ -164,12 +162,15 @@ table(df_sections$name_region, df_sections$passe_livre_2)
 # aggregate variables at muni level
 df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T),
                            QT_APTOS_log = log(sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)),
+                           biometria = weighted.mean(x=biometria, w=QT_APTOS, na.rm=T),
+                           qt_biometria = sum(qt_biometria[which(NR_TURNO==2)], na.rm=T),
                            votos_jair_muni_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_total[which(NR_TURNO==1)]),
                            mean_dist = mean(dist_sede, na.rm=T),
                            mean_dens_1000 = mean(num_1000, na.rm=T),
                            educacao_1 = weighted.mean(x=educacao_1, w=QT_APTOS, na.rm=T),
                            SG_UF = SG_UF[1L],
                            name_region = name_region[1L],
+                           variacao_comparecimento_2018 = variacao_comparecimento_2018[1L],
                            gov_2t = max(gov_2t),
                            pib_log = log(PIB_PC)[1L],
                            passe_livre_2 = max(passe_livre_2)), 
@@ -219,7 +220,11 @@ setcolorder(b, 'variable')
 # ipw balancing ----------------------------------------------------------------------
 # 6666 incluir  name_region ??? melhora ipw
 
-step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + votos_jair_muni_p + gov_2t , # + mean_dens_1000, 
+# df_muni$biometria
+# df_muni$variacao_comparecimento_2018
+
+
+step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + biometria + votos_jair_muni_p + gov_2t , # + mean_dens_1000, 
              family = binomial(link = 'logit'),
              data = df_muni)
 
@@ -297,6 +302,45 @@ ggplot() +
  #scale_color_uchicago() +
  scale_color_jama() +
  theme_classic()
+
+
+
+
+# Model 2. URBAN vs RURAL  ------------------------------------------
+
+
+reg_urban <- function(z){  # z = 'urban'
+ 
+ # select group
+ temp_df_section <- df_sections[ zone == z, ]
+ 
+ # reg
+ step2 <- fixest::feols(comparecimento_2022~turno2_dummy +  passe_livre_2 + turno2_dummy:passe_livre_2, 
+                        fixef = 'id_secao', 
+                        cluster = 'code_muni',
+                        weights = ~ipw,
+                        data = temp_df_section)
+ 
+ output <- data.frame(zone = z,
+                      coef = step2$coeftable[2, 1],
+                      se = step2$coeftable[2, 2]) 
+ return(output)
+}
+
+output_did_urban <- purrr::map(.x = unique(df_sections$zone),
+                               .f = reg_urban) |> rbindlist()
+
+
+ggplot() +
+ geom_point(data = output_did_urban, aes(x= zone, y=coef)) +
+ geom_pointrange(data=output_did_urban,
+                 # show.legend = FALSE,
+                 aes(x=zone, y=coef,
+                     ymin = coef - 1.96*se,
+                     ymax = coef + 1.96*se)) +
+ geom_hline(yintercept = 0, color='gray20') +
+ theme_classic()
+
 
 
 

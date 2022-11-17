@@ -9,6 +9,7 @@ library(ggplot2)
 library(purrr)
 library(modelsummary)
 library(ggplot2)
+library(ggsci)
 
 options(scipen = 999)
 
@@ -159,6 +160,8 @@ table(df_sections$name_region, df_sections$passe_livre_2)
 # aggregate variables at muni level
 df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T),
                            QT_APTOS_log = log(sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)),
+                           biometria = weighted.mean(x=biometria, w=QT_APTOS, na.rm=T),
+                           qt_biometria = sum(qt_biometria[which(NR_TURNO==2)], na.rm=T),
                            votos_jair_muni_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_total[which(NR_TURNO==1)]),
                            mean_dist = mean(dist_sede, na.rm=T),
                            mean_dens_1000 = mean(num_1000, na.rm=T),
@@ -215,14 +218,18 @@ setcolorder(b, 'variable')
 
 
 # ipw balancing ----------------------------------------------------------------------
+df_muni$biometria
+df_muni$variacao_comparecimento_2018
+# rogerio 666
+ df_sections[, mean(variacao_comparecimento_2018), by = NR_TURNO]
 
-step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log +votos_jair_muni_p + gov_2t  , # + mean_dens_1000, 
+
+step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + votos_jair_muni_p + biometria + gov_2t  , # + mean_dens_1000, 
              family = binomial(link = 'logit'),
              data = df_muni)
 
 summary(step1)
 df_muni[, ipw := (passe_livre_2 / fitted(step1)) + ((1 - passe_livre_2) / ( 1- fitted(step1)))]
-
 
 hist(df_muni$ipw)
 summary(df_muni$ipw)
@@ -371,7 +378,7 @@ reg_urban <- function(z){  # z = 'urban'
  temp_df_section <- df_sections[ zone == z, ]
  
  # reg
- step2 <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+ step2 <- fixest::feols(comparecimento_2022~turno2_dummy +  passe_livre_2 + turno2_dummy:passe_livre_2, 
                         fixef = 'id_secao', 
                         cluster = 'code_muni',
                         weights = ~ipw,
@@ -576,14 +583,14 @@ reg_group_edu_dist <- function(e, d){  # e = .8 ; d = 60
                             fixef = 'id_secao', 
                             cluster = 'code_muni',
                             weights = ~ipw,
-                            data = subset(temp_df, num_1000_cat ==  d)
+                            data = subset(temp_df, num_1000_cat10 ==  d)
                             )
  
  step2_below <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                              fixef = 'id_secao', 
                              cluster = 'code_muni',
                              weights = ~ipw,
-                             data = subset(temp_df, num_1000_cat ==   d)
+                             data = subset(temp_df, num_1000_cat10 ==   d)
                              )
  
  output_above <- data.frame(e = e,
@@ -606,7 +613,7 @@ reg_group_edu_dist <- function(e, d){  # e = .8 ; d = 60
 
 # run regressions
 all_combinations <- expand.grid(my_breaks[-length(my_breaks)][-1],
-                               unique(df_sections$num_1000_cat))
+                               unique(df_sections$num_1000_cat10))
 
 output3d <- purrr::map2(.x = all_combinations$Var1,
                         .y = all_combinations$Var2,
