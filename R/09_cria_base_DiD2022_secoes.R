@@ -39,12 +39,13 @@ nrow(eleicao_2022)
 
 
 
-
+espacial$NR_ZONA
 # MERGE spatial info --------------------------------------------------
 espacial[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 espacial <- espacial[,c("dist_sede", "closest_dist_any", "closest_dist", "num_0500",
                         "num_1000", "num_3000","num_5000","num_10000",
-                        "id_secao", 'zone')]
+                        "id_secao", 'zone'
+                        )]
 eleicao_2022 <- merge(eleicao_2022, espacial, by="id_secao", all.x = T)
 
 summary(eleicao_2022$num_1000)
@@ -166,7 +167,6 @@ summary(eleicao_2022$votos_total)
 
 
 # adicionar variação de comparecimento por municipio em 2018 -------------------
-
 # separar por turno
 T1 <- SE18[NR_TURNO==1,]
 T2 <- SE18[NR_TURNO==2,]
@@ -194,6 +194,24 @@ eleicao_2022 <- merge(eleicao_2022,
                       MM[,c("CD_MUNICIPIO","variacao_comparecimento_2018")],
                       by="CD_MUNICIPIO", all.x = T)
 
+# adicionar votação por turno (p/ PLACEBO) em 2018 -----------------------------
+
+# separar por turno
+
+SE18[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
+
+T1 <- subset(eleicao_2022, NR_TURNO==1)
+T2 <- subset(eleicao_2022, NR_TURNO==2)
+T1_18 <- subset(SE18, NR_TURNO==1)
+T2_18 <- subset(SE18, NR_TURNO==2)
+
+T1 <- merge(T1, T1_18[,c("id_secao","comparecimento_2018")], by="id_secao", all.x=T)
+T2 <- merge(T2, T2_18[,c("id_secao","comparecimento_2018")], by="id_secao", all.x=T)
+
+eleicao_2022 <- rbind(T1, T2)
+
+
+
 # salvar arquivo final----------------------------------------------------------
 # seleciona apenas variáveis que serão usadas
 my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NM_LOCAL_VOTACAO", "NR_SECAO",
@@ -210,12 +228,14 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NM_LOCAL_VOTACAO", "NR_SECAO
             "idade_16_17","idade_18_24","idade_60M",
             "biometria", "qt_biometria",
             "comparecimento_2022","abstencao_2022",
+            "comparecimento_2018",
             
             "variacao_comparecimento_2018",
             
             "dist_sede", "closest_dist_any", "closest_dist",
             "num_0500", "num_1000","num_3000",
-            "num_5000","num_10000", 'zone',
+            "num_5000","num_10000",
+            'zone',
             "votos_lula", "votos_jair", "votos_total",
             "dummy_pt", "passe_livre","PIB_PC")
 
