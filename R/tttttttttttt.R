@@ -33,6 +33,11 @@ BD <- subset(BD, dummy_pt==1)
 BD[, table(NR_TURNO, dummy_pt)]
 BD[, table(NR_TURNO, passe_livre)]
 
+#>            passe_livre
+#> NR_TURNO      0      1
+#>        1 260427  73829
+#>        2 130466 203790
+
 
 # identify treated in the 1st round
 BD[, passe_livre_1 := max(NR_TURNO==1 & passe_livre==1), by = id_secao]
@@ -41,6 +46,12 @@ table(BD$passe_livre_1)
 BD[, table(NR_TURNO, passe_livre_1)]
 
 BD[NR_TURNO==2, table(passe_livre_1, passe_livre)]
+
+#>          passe_livre_1
+#> NR_TURNO      0      1
+#>        1 260427  73829
+#>        2 260427  73829
+
 
 # drop always treated
 df_sections <- BD[ passe_livre_1 != 1]
@@ -157,12 +168,17 @@ df_sections <- left_join(df_sections, regions, by=c('code_region'))
 table(df_sections$name_region, df_sections$passe_livre_2)
 
 
+
+# valid votes
+df_sections$votos_validos
+
 # aggregate variables at muni level
 df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T),
                            QT_APTOS_log = log(sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)),
                            biometria = weighted.mean(x=biometria, w=QT_APTOS, na.rm=T),
                            qt_biometria = sum(qt_biometria[which(NR_TURNO==2)], na.rm=T),
-                           votos_jair_muni_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_total[which(NR_TURNO==1)]),
+                           votos_jair_muni_total_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_total[which(NR_TURNO==1)]),
+                           votos_jair_muni_validos_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_validos[which(NR_TURNO==1)]),
                            mean_dist = mean(dist_sede, na.rm=T),
                            mean_dens_1000 = mean(num_1000, na.rm=T),
                            educacao_1 = weighted.mean(x=educacao_1, w=QT_APTOS, na.rm=T),
@@ -192,12 +208,12 @@ summary(df_sections)
 # check if numbers are balanced
 df_sections[, table(passe_livre_2, turno2_dummy)]
 
-
+df_muni$votos_jair_muni_total_p
 
 # balancing before ipw 
 a <- df_muni[,   .(QT_APTOS          = weighted.mean(x=QT_APTOS),
                    QT_APTOS_log      = weighted.mean(x=QT_APTOS_log),
-                   votos_jair_muni_p = weighted.mean(x=votos_jair_muni_p),
+                   votos_jair_muni_total_p = weighted.mean(x=votos_jair_muni_total_p),
                    mean_dist         = weighted.mean(x=mean_dist, na.rm=T),
                    mean_dens_1000    = weighted.mean(x=mean_dens_1000),
                    educacao_1        = weighted.mean(x=educacao_1),
@@ -220,11 +236,12 @@ setcolorder(b, 'variable')
 # ipw balancing ----------------------------------------------------------------------
 df_muni$biometria
 df_muni$variacao_comparecimento_2018
+df_muni$votos_jair_muni_validos_p
 # rogerio 666
  df_sections[, mean(variacao_comparecimento_2018), by = NR_TURNO]
 
 
-step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + votos_jair_muni_p + biometria + gov_2t  , # + mean_dens_1000, 
+step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + votos_jair_muni_validos_p + biometria + gov_2t  , # + mean_dens_1000, 
              family = binomial(link = 'logit'),
              data = df_muni)
 
@@ -238,7 +255,7 @@ summary(df_muni$ipw)
 # balancing AFTER ipw 
 a <- df_muni[,   .(QT_APTOS          = weighted.mean(x=QT_APTOS, w = ipw),
                    QT_APTOS_log      = weighted.mean(x=QT_APTOS_log, w = ipw),
-                   votos_jair_muni_p = weighted.mean(x=votos_jair_muni_p, w = ipw),
+                   votos_jair_muni_total_p = weighted.mean(x=votos_jair_muni_total_p, w = ipw),
                    mean_dist         = weighted.mean(x=mean_dist, w = ipw, na.rm=T),
                    mean_dens_1000    = weighted.mean(x=mean_dens_1000, w = ipw),
                    educacao_1        = weighted.mean(x=educacao_1, w = ipw),
@@ -324,7 +341,7 @@ reg_region <- function(r){  # r = 'Norte'
  temp_df_section <- df_sections[ name_region == r, ]
  
  # calculate ipw
- temp_step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + votos_jair_muni_p + gov_2t, # + mean_dens_1000, 
+ temp_step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + votos_jair_muni_validos_p + gov_2t, # + mean_dens_1000, 
               family = binomial(link = 'logit'),
               data = temp_df_muni)
  
