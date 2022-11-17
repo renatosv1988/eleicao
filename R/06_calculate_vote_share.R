@@ -14,7 +14,7 @@ my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
 lista_T1 <- list()
 lista_T2 <- list()
 
-for(i in 1:27){ # i <- 2
+for(i in 1:27){ # i <- 1
 tictoc::tic()
  
  # caminhos dos CSVs nos Zips
@@ -44,8 +44,8 @@ tictoc::tic()
  
  
  # filtrar para eleição presidencial apenas
- urnas_T1 <- as.data.table(subset(urnas_T1, DS_CARGO_PERGUNTA=="Presidente"))
- urnas_T2 <- as.data.table(subset(urnas_T2, DS_CARGO_PERGUNTA=="Presidente"))
+ urnas_T1 <- setDT(subset(urnas_T1, DS_CARGO_PERGUNTA=="Presidente"))
+ urnas_T2 <- setDT(subset(urnas_T2, DS_CARGO_PERGUNTA=="Presidente"))
  
  # criar id_secao
  urnas_T1[, id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
@@ -54,17 +54,40 @@ tictoc::tic()
  # votos por candidato
  urnas_T1[, votos_lula := fifelse(NM_VOTAVEL=="LULA", QT_VOTOS, 0)]
  urnas_T1[, votos_jair := fifelse(NM_VOTAVEL=="JAIR BOLSONARO", QT_VOTOS, 0)]
+ urnas_T1[, votos_nulo := fifelse(NM_VOTAVEL=="Nulo", QT_VOTOS, 0)]
+ urnas_T1[, votos_branco := fifelse(NM_VOTAVEL=="Branco", QT_VOTOS, 0)]
+ urnas_T1[, votos_validos := fifelse(NM_VOTAVEL != "Branco" & NM_VOTAVEL != "Nulo", QT_VOTOS, 0)]
+ 
  urnas_T2[, votos_lula := fifelse(NM_VOTAVEL=="LULA", QT_VOTOS, 0)]
  urnas_T2[, votos_jair := fifelse(NM_VOTAVEL=="JAIR BOLSONARO", QT_VOTOS, 0)]
+ urnas_T2[, votos_nulo := fifelse(NM_VOTAVEL=="Nulo", QT_VOTOS, 0)]
+ urnas_T2[, votos_branco := fifelse(NM_VOTAVEL=="Branco", QT_VOTOS, 0)]
+ urnas_T2[, votos_validos := fifelse(NM_VOTAVEL != "Branco" & NM_VOTAVEL != "Nulo", QT_VOTOS, 0)]
  
  # agregar por secao
  votos_T1 <- urnas_T1[, .(votos_lula = sum(votos_lula),
                           votos_jair = sum(votos_jair),
-                          votos_total = sum(QT_VOTOS)), by = .(id_secao)]
+                          votos_nulo = sum(votos_nulo),
+                          votos_branco = sum(votos_branco),
+                          votos_validos = sum(votos_validos),
+                          votos_total = sum(QT_VOTOS),
+                          QT_APTOS = QT_APTOS[1L],
+                          QT_ABSTENCOES = QT_ABSTENCOES[1L],
+                          QT_COMPARECIMENTO = QT_COMPARECIMENTO[1L]), 
+                      by = .(id_secao)]
+ 
  votos_T2 <- urnas_T2[, .(votos_lula = sum(votos_lula),
                           votos_jair = sum(votos_jair),
-                          votos_total = sum(QT_VOTOS)), by = .(id_secao)]
+                          votos_nulo = sum(votos_nulo),
+                          votos_branco = sum(votos_branco),
+                          votos_validos = sum(votos_validos),
+                          votos_total = sum(QT_VOTOS),
+                          QT_APTOS = QT_APTOS[1L],
+                          QT_ABSTENCOES = QT_ABSTENCOES[1L],
+                          QT_COMPARECIMENTO = QT_COMPARECIMENTO[1L]), 
+                      by = .(id_secao)]
  
+
  lista_T1[[i]] <- votos_T1
  lista_T2[[i]] <- votos_T2
  
