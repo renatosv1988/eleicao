@@ -1,3 +1,7 @@
+#' scripts	3 and 4 (calculate turnout) are unecessary because we get the same 
+#' info from scripts 5 and 6 (pq JÁ calculamos na 5 e 6 vote share) vote share
+
+
 library(data.table)
 library(dplyr)
 

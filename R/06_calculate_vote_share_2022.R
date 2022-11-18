@@ -4,7 +4,7 @@ library(tictoc)
 
 
 # adicionar votação por candidato ----------------------------------------------
-dir_urnas <- '../../data_raw/urnas'
+dir_urnas <- '../../data_raw/urnas_2022'
 
 # UFs
 my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
@@ -41,11 +41,6 @@ tictoc::tic()
  unlink(temp_dir_1, recursive = T)
  unlink(temp_dir_2, recursive = T)
  gc()
- # urnas_T1 <- read.csv(unz(path_zip_T1, path_csv_T1), sep = ";", encoding = "Latin-1")
- # urnas_T2 <- read.csv(unz(path_zip_T2, path_csv_T2), sep = ";", encoding = "Latin-1")
- # urnas_T1 <- vroom(path_zip_T1, delim = ";") #, locale(encoding = "latin1"))
- # urnas_T2 <- vroom(path_zip_T2, delim = ";") #, locale(encoding = "latin1"))
- 
  
  # filtrar para eleição presidencial apenas
  urnas_T1 <- setDT(subset(urnas_T1, DS_CARGO_PERGUNTA=="Presidente"))

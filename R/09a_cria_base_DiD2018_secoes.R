@@ -17,15 +17,16 @@ espacial <- fread('../../data/spatial/electoral_sections_spatial.csv')
 munic <- fread('../../data/munic/munic_dummy_pt.csv')
 corr_ibge_tse <- fread("../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv", encoding = "UTF-8")
 pib <- fread("../../data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8")
-# perfil <- fread('../../data/secoes/secoes_perfil_2022.csv')
+perfil <- fread('../../data/secoes/secoes_perfil_2022.csv')
 votos_T1 <- fread('../../data/votes_2018/votos_T1.csv')
 votos_T2 <- fread('../../data/votes_2018/votos_T2.csv')
-
 
 eleicao_2018_raw <- fread('../../data/secoes/secoes_2018.csv')
 eleicao_2018_raw[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 
 gc()
+
+
 
 
 
@@ -35,7 +36,7 @@ gc()
 eleicao_2022_raw <- fread('../../data/secoes/secoes_2022.csv')
 eleicao_2022_raw[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 
-# idetfy detention centers
+# idetify detention centers
 detention_centers <- c('PRISIONAL|SÓCIO EDUCATIVO|PENITENCIÁRIO|INTERNAÇÃO|UPR DE|UI/UIP|PRESÍDIO|DETENÇÃO|PRIVAÇÃO|PENAL|PENITENCIARIA|PENITENCIÁRIA|SOCIOEDUCATIVO|CADEIA|FUNASE|CADE|CASE|VOTO EM TRÂNSITO|PRESIDIO|PRISIONAL|CENTRO DE RECUPERAÇÃO|SOCIO EDUCATIVO|IASES|CDPSM|FUNDAÇÃO CASA|CDP|SÓCIOEDUCATIVO|RESSOCIALIZAÇÃO|PENINTENCIÁRIO|RESSOCIALIZAÇÃO')
 eleicao_2022_raw[, detention_dummy := fifelse(NM_LOCAL_VOTACAO %like% detention_centers, 1, 0)]
 
@@ -43,10 +44,9 @@ id_secao_detention2022 <- eleicao_2022_raw[detention_dummy==1]$id_secao
 id_secao_detention2022 |> length()
 #> 1088
 
-eleicao_2018 <- eleicao_2018_raw[ id_secao %unlike% id_secao_detention2022]
+eleicao_2018 <- eleicao_2018_raw[ id_secao %nin% id_secao_detention2022]
 nrow(eleicao_2018)
-#> 907410
-# 66666 só dropa 2 presidios
+#> 906608
 
 # MERGE spatial info --------------------------------------------------
 espacial[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
@@ -70,31 +70,31 @@ munic <- merge(munic, corr_ibge_tse, by="code_muni", all.x = T)
 eleicao_2018 <- merge(eleicao_2018, munic[,c("CD_MUNICIPIO", "dummy_pt", "code_muni")],
                       by="CD_MUNICIPIO", all.x = T)
 
-summary(eleicao_2018$dummy_pt)
-#>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#> 0.0000  0.0000  1.0000  0.7105  1.0000  1.0000 
+table(eleicao_2018$dummy_pt, useNA = 'always')
+#>       0      1   <NA> 
+#>  262678 643930      0 
 
 
-# # MERGE perfil -----------------------------------------------------------------
-# perfil[, mulheres := mulher / qt_perfil ]
-# perfil[, educacao_1 := educ_prim / qt_perfil ]
-# perfil[, idade_16_17 := idade_16_17 / qt_perfil ]
-# perfil[, idade_18_24 := idade_18_24 / qt_perfil ]
-# perfil[, idade_60M := idade_60M / qt_perfil ]
-# 
-# summary(perfil$educacao_1)
-# 
-# eleicao_2022 <- merge(eleicao_2022, perfil[,c("id_secao","mulheres","educacao_1",
-#                                               "idade_16_17","idade_18_24","idade_60M")],
-#                       by="id_secao", all.x = T)
-# 
-# summary(eleicao_2022$educacao_1)
-# #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-# #>  0.0000  0.2887  0.4150  0.4189  0.5494  1.0000     210   # pq ????
-# 
-# #  check NAs
-# # eleicao_2022[is.na(educacao_1)] |> View()
+# MERGE perfil -----------------------------------------------------------------
+perfil[, mulheres := mulher / qt_perfil ]
+perfil[, educacao_1 := educ_prim / qt_perfil ]
+perfil[, idade_16_17 := idade_16_17 / qt_perfil ]
+perfil[, idade_18_24 := idade_18_24 / qt_perfil ]
+perfil[, idade_60M := idade_60M / qt_perfil ]
 
+summary(perfil$educacao_1)
+
+eleicao_2018 <- merge(eleicao_2018, perfil[,c("id_secao","mulheres","educacao_1",
+                                              "idade_16_17","idade_18_24","idade_60M")],
+                      by="id_secao", all.x = T)
+
+summary(eleicao_2018$educacao_1)
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#>   0.000   0.294   0.419   0.423   0.552   1.000   14482 
+
+# proportion of missing
+eleicao_2018[ is.na(educacao_1) , .N] / nrow(eleicao_2018)
+#> 0.01597383
 
 
 # MERGE PASSE LIVRE ------------------------------------------------------------
@@ -114,15 +114,14 @@ t2 <- merge(t2, passe_livre_t2, by="CD_MUNICIPIO", all.x = T)
 
 # junta as bases novamente
 eleicao_2018 <- rbind(t1, t2)
-table(eleicao_2018$passe_livre, useNA = 'always')
 
 # replace NAs with 0
 eleicao_2018[is.na(passe_livre), passe_livre := 0]
 
 
-summary(eleicao_2018$passe_livre)
-#>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#> 0.0000  0.0000  0.0000  0.3032  1.0000  1.0000 
+table(eleicao_2018$passe_livre, useNA = 'always')
+#>       0      1   <NA> 
+#>  631783 274825      0 
 
 
 
@@ -164,9 +163,14 @@ summary(eleicao_2018$votos_total)
 #>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
 #>    1.0   220.0   266.0   256.7   301.0   489.0       2 
 
+summary(eleicao_2018$comparecimento_2018)
+#>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#> 0.0000  0.7500  0.8009  0.7940  0.8449  1.0000 
 
 
-# adicionar variação de comparecimento por municipio em 2018 -------------------
+# adicionar variacao de comparecimento por municipio em 2018 -------------------
+
+
 
 # separar por turno
 T1 <- eleicao_2018[NR_TURNO==1,]
@@ -191,6 +195,8 @@ eleicao_2018 <- merge(eleicao_2018,
                       MM[,c("id_secao","variacao_comparecimento_2018")],
                       by="id_secao", all.x = T)
 
+summary(eleicao_2018$variacao_comparecimento_2018)
+
 # salvar arquivo final----------------------------------------------------------
 # seleciona apenas variáveis que serão usadas
 my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
@@ -214,7 +220,7 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
             "num_5000","num_10000",
             "votos_lula", "votos_jair", "votos_total",
             "votos_nulo" , "votos_validos", "votos_branco", 
-            "dummy_pt", "t", "passe_livre","PIB_PC")
+            "dummy_pt", "passe_livre","PIB_PC")
 
 eleicao_2018 <- eleicao_2018[, ..my_var]
 

@@ -21,10 +21,21 @@ perfil <- fread('../../data/secoes/secoes_perfil_2022.csv')
 votos_T1 <- fread('../../data/votes/votos_T1.csv')
 votos_T2 <- fread('../../data/votes/votos_T2.csv')
 SE18 <- fread('../../data/base_DiD2018_secoes.csv')
+
 eleicao_2022_raw <- fread('../../data/secoes/secoes_2022.csv')
 eleicao_2022_raw[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 
 gc()
+
+
+# #check linkage of sections between 2018 and 2022
+# 
+# (unique(SE18$id_secao) %in% unique(eleicao_2022_raw$id_secao) |>sum()) / length(unique(SE18$id_secao))
+# # 0.9635454
+# 
+# (unique(eleicao_2022_raw$id_secao) %in% unique(SE18$id_secao) |>sum()) / length(unique(eleicao_2022_raw$id_secao))
+# # 0.9273243
+
 
 # filter  --------------------------------------------------
 
@@ -51,20 +62,22 @@ summary(eleicao_2022$num_1000)
 #> Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #> 1.00   15.00   34.00   45.43   65.00  313.00 
 
-table(eleicao_2022$zone)
-
+table(eleicao_2022$zone, useNA = 'always')
+#>   rural  urban   <NA> 
+#>  100286 840646      0 
 
 
 # MERGE MUNIC ------------------------------------------------------------------
 corr_ibge_tse <- corr_ibge_tse[,c("codigo_tse", "codigo_ibge")]
 colnames(corr_ibge_tse) <- c("CD_MUNICIPIO", "code_muni")
+
 munic <- merge(munic, corr_ibge_tse, by="code_muni", all.x = T)
 eleicao_2022 <- merge(eleicao_2022, munic[,c("CD_MUNICIPIO", "dummy_pt", "code_muni")],
                       by="CD_MUNICIPIO", all.x = T)
 
-summary(eleicao_2022$dummy_pt)
-#>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-#> 0.0000  0.0000  1.0000  0.7105  1.0000  1.0000 
+table(eleicao_2022$dummy_pt, useNA = 'always')
+#>       0      1   <NA> 
+#>  272420 668512      0 
 
 
 # MERGE perfil -----------------------------------------------------------------
@@ -88,8 +101,7 @@ summary(eleicao_2022$educacao_1)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
 #>  0.0000  0.2887  0.4150  0.4189  0.5494  1.0000     210   # pq ????
 
-#  check NAs
-# eleicao_2022[is.na(educacao_1)] |> View()
+
 
 
 
@@ -136,7 +148,6 @@ summary(eleicao_2022$PIB_PC)
 
 # adicionar votação por candidato ----------------------------------------------
 
-
 # merge data
 # separa bases por turno
 t1 <- subset(eleicao_2022, NR_TURNO==1)
@@ -145,6 +156,7 @@ t2 <- subset(eleicao_2022, NR_TURNO==2)
 # temp 6666
 votos_T1 <- votos_T1[, -c('QT_APTOS','QT_ABSTENCOES','QT_COMPARECIMENTO')]
 votos_T2 <- votos_T2[, -c('QT_APTOS','QT_ABSTENCOES','QT_COMPARECIMENTO')]
+
 
 # merge data
 t1 <- merge(t1, votos_T1, by="id_secao", all.x = T)
@@ -166,21 +178,30 @@ summary(eleicao_2022$votos_total)
 #> Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #> 10.0   228.0   269.0   262.6   302.0   508.0 
 
+summary(eleicao_2022$comparecimento_2022)
+#>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#> 0.1330  0.7576  0.8006  0.7939  0.8361  1.0000 
+
+
 
 
 # adicionar variacao de comparecimento em 2018 por secao  -------------------
+summary(SE18$comparecimento_2018)
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#>  0.0000  0.7500  0.8009  0.7940  0.8449  1.0000
 
 eleicao_2022 <- merge(eleicao_2022,
                       SE18[, .(id_secao, NR_TURNO, comparecimento_2018, variacao_comparecimento_2018)], 
                       by=c('id_secao', 'NR_TURNO'), all.x = T)
 
 summary(eleicao_2022$comparecimento_2018)
-#> Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
 #>    0.00    0.75    0.80    0.79    0.84    1.00   67372 
-   
-# PESSIMO pareamento de secoes entre 2018 e 2022 !!!!!!!!!!!!!!!!!! 66666666666666666
-(unique(eleicao_2022$id_secao) %in% unique(SE18$id_secao) |>sum()) / nrow(eleicao_2022)
-# apenas 46%
+
+eleicao_2022[ is.na(comparecimento_2018) , .N] / nrow(eleicao_2022)
+#> 0.07160347
+
+
 
 
 # adicionar comparecimento em 2018 por municipio  -------------------
@@ -198,22 +219,24 @@ eleicao_2022 <- merge(eleicao_2022,
                       comparecimento_2018,
                       by=c('CD_MUNICIPIO', 'NR_TURNO'), all.x = T)
 
+summary(eleicao_2022$comparecimento_2018_muni)
+
 
 # adicionar variacao de comparecimento em 2018 por municipio  -------------------
 
-variacao_compar_2018_muni <- SE18[, .(variacao_comparecimento_2018_muni = weighted.mean(variacao_comparecimento_2018, w=QT_APTOS)), 
+var_compar_2018_muni <- SE18[, .(variacao_comparecimento_2018_muni = weighted.mean(variacao_comparecimento_2018, w=QT_APTOS)), 
                                   by=CD_MUNICIPIO]
 
-summary(variacao_compar_2018_muni$variacao_comparecimento_2018_muni)
+summary(var_compar_2018_muni$variacao_comparecimento_2018_muni)
 #>      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
 #> -0.236164 -0.026915 -0.012099 -0.018386 -0.003857  0.132907 
 
 # merge
 eleicao_2022 <- merge(eleicao_2022,
-                      variacao_compar_2018_muni,
+                      var_compar_2018_muni,
                       by="CD_MUNICIPIO", all.x = T)
 
-
+summary(eleicao_2022$variacao_comparecimento_2018_muni)
 
 # salvar arquivo final----------------------------------------------------------
 # seleciona apenas variáveis que serão usadas
