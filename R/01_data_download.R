@@ -29,7 +29,7 @@ library(httr)
 
 
 
-#### eleitorado SECAO  ----------------------------------------------------------
+#### eleitorado secao (perfil) ----------------------------------------------------------
 #' perfil de escolaridade em cada zona
 #' https://dadosabertos.tse.jus.br/dataset/eleitorado-2022
 
@@ -53,7 +53,7 @@ unzip(paste0(dir_eleitorado, paste0("/eleitorado_",my_uf[i],"_2022.zip")), exdir
 
 
 
-#### zonas --------------------------------------------------
+#### zonas (spatial) --------------------------------------------------
 #' quantidade de eleitores registrados em cada secao e cada zona
 #' https://dadosabertos.tse.jus.br/dataset/eleitorado-2022
 
@@ -72,24 +72,6 @@ unzip(paste0(dir_zonas,"/zonas_2022.zip"), exdir = dir_zonas)
 unzip(paste0(dir_zonas,"/zonas_2018.zip"), exdir = dir_zonas)
 
 
-
-
-#### votacao --------------------------------------------------
-#' https://dadosabertos.tse.jus.br/dataset/resultados-2022
-
-# create dir
-dir_votacao <- '../../data_raw/votacao'
-dir.create(dir_votacao)
-
-# download data
-download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2022.zip",
-              destfile = paste0(dir_votacao,"/votacao_2022.zip"))
-download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2018.zip",
-              destfile = paste0(dir_votacao,"/votacao_2018.zip"))
-
-# unzip data to local dir
-unzip(paste0(dir_votacao,"/votacao_2022.zip"), exdir = dir_votacao)
-unzip(paste0(dir_votacao,"/votacao_2018.zip"), exdir = dir_votacao)
 
 
 
@@ -174,6 +156,8 @@ dir.create(dir_munic)
 fwrite(munic, '../../data/munic/munic_dummy_pt.csv')
 
 
+
+
 #### correspondencia IBGE TSE MUNICIPIOS ---------------------------------------
 dir_tse_ibge <- '../../data_raw/tse_ibge'
 dir.create(dir_tse_ibge)
@@ -181,8 +165,32 @@ download.file(url = "https://raw.githubusercontent.com/betafcc/Municipios-Brasil
               destfile="../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv")
 
 
-#### urnas ---------------------------------------------------------------------
-dir_urnas <- '../../data_raw/urnas'
+
+
+
+#' 
+#' #### votacao --------------------------------------------------
+#' #' https://dadosabertos.tse.jus.br/dataset/resultados-2022
+#' 
+#' # create dir
+#' dir_votacao <- '../../data_raw/votacao'
+#' dir.create(dir_votacao)
+#' 
+#' # download data
+#' download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2022.zip",
+#'               destfile = paste0(dir_votacao,"/votacao_2022.zip"))
+#' download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_candidato_munzona/votacao_candidato_munzona_2018.zip",
+#'               destfile = paste0(dir_votacao,"/votacao_2018.zip"))
+#' 
+#' # unzip data to local dir
+#' unzip(paste0(dir_votacao,"/votacao_2022.zip"), exdir = dir_votacao)
+#' unzip(paste0(dir_votacao,"/votacao_2018.zip"), exdir = dir_votacao)
+# 666 delete this. I think we don't use this data because we get the same info from 'urnas'
+
+
+
+#### urnas 2022 ---------------------------------------------------------------------
+dir_urnas <- '../../data_raw/urnas_2022'
 dir.create(dir_urnas)
 
 
