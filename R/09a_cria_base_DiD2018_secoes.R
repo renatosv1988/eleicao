@@ -217,7 +217,7 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
             
             "dist_sede", "closest_dist_any", "closest_dist",
             "num_0500", "num_1000","num_3000",
-            "num_5000","num_10000",
+            "num_5000","num_10000", 'zone',
             "votos_lula", "votos_jair", "votos_total",
             "votos_nulo" , "votos_validos", "votos_branco", 
             "dummy_pt", "passe_livre","PIB_PC")
