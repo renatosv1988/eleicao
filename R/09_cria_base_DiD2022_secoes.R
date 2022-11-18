@@ -20,7 +20,7 @@ pib <- fread("../../data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8"
 perfil <- fread('../../data/secoes/secoes_perfil_2022.csv')
 votos_T1 <- fread('../../data/votes/votos_T1.csv')
 votos_T2 <- fread('../../data/votes/votos_T2.csv')
-SE18 <- fread('../../data/secoes/secoes_2018.csv')
+SE18 <- fread('../../data/base_DiD2018_secoes.csv')
 eleicao_2022_raw <- fread('../../data/secoes/secoes_2022.csv')
 eleicao_2022_raw[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 
@@ -39,13 +39,12 @@ nrow(eleicao_2022)
 
 
 
-espacial$NR_ZONA
+
 # MERGE spatial info --------------------------------------------------
 espacial[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
 espacial <- espacial[,c("dist_sede", "closest_dist_any", "closest_dist", "num_0500",
                         "num_1000", "num_3000","num_5000","num_10000",
-                        "id_secao", 'zone'
-                        )]
+                        "id_secao", 'zone')]
 eleicao_2022 <- merge(eleicao_2022, espacial, by="id_secao", all.x = T)
 
 summary(eleicao_2022$num_1000)
@@ -109,8 +108,6 @@ colnames(passe_livre_t2) <-c("CD_MUNICIPIO", "passe_livre")
 t1 <- merge(t1, passe_livre_t1, by="CD_MUNICIPIO", all.x = T)
 t2 <- merge(t2, passe_livre_t2, by="CD_MUNICIPIO", all.x = T)
 
-
-
 # junta as bases novamente
 eleicao_2022 <- rbind(t1, t2)
 table(eleicao_2022$passe_livre, useNA = 'always')
@@ -170,51 +167,30 @@ summary(eleicao_2022$votos_total)
 #> 10.0   228.0   269.0   262.6   302.0   508.0 
 
 
-summary(eleicao_2022$votos_validos)
 
-# adicionar variação de comparecimento por municipio em 2018 -------------------
-# separar por turno
-T1 <- SE18[NR_TURNO==1,]
-T2 <- SE18[NR_TURNO==2,]
+# adicionar variacao de comparecimento em 2018 por secao  -------------------
 
-# calcular comparecimento por municipio por turno
-M1 <- T1[,.(comparecimento_t1 = sum(QT_COMPARECIMENTO),
-            aptos_t1 = sum(QT_APTOS)),
-         by=CD_MUNICIPIO]
+a <- merge(eleicao_2022,
+           SE18[, .(id_secao, variacao_comparecimento_2018)], 
+           by='id_secao', all.x = T)
 
-M2 <- T2[,.(comparecimento_t2 = sum(QT_COMPARECIMENTO),
-            aptos_t2 = sum(QT_APTOS)),
-         by=CD_MUNICIPIO]
+# PESSIMO pareamento de secoes entre 2018 e 2022
+(unique(eleicao_2022$id_secao) %in% unique(SE18$id_secao) |>sum()) / nrow(eleicao_2022)
+# apenas 46%
 
-M1$comp_t1 <- M1$comparecimento_t1/M1$aptos_t1
-M2$comp_t2 <- M2$comparecimento_t2/M2$aptos_t2
 
-# juntar turnos
-MM <- merge(M1, M2[,c("CD_MUNICIPIO","comp_t2")], by="CD_MUNICIPIO", all.x = T)
+# adicionar variacao de comparecimento em 2018 por municipio  -------------------
 
-# calcular variação
-MM$variacao_comparecimento_2018 <- MM$comp_t2 - MM$comp_t1
+variacao_compar_2018_muni <- SE18[, .(variacao_comparecimento_2018_muni = weighted.mean(variacao_comparecimento_2018, 
+                                                                                        w=QT_APTOS)), 
+                                  by=CD_MUNICIPIO]
 
-# merge na base principal
+summary(variacao_compar_2018_muni$variacao_comparecimento_2018_muni)
+
+# merge
 eleicao_2022 <- merge(eleicao_2022,
-                      MM[,c("CD_MUNICIPIO","variacao_comparecimento_2018")],
+                      variacao_compar_2018_muni,
                       by="CD_MUNICIPIO", all.x = T)
-
-# adicionar votação por turno (p/ PLACEBO) em 2018 -----------------------------
-
-# separar por turno
-
-SE18[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
-
-T1 <- subset(eleicao_2022, NR_TURNO==1)
-T2 <- subset(eleicao_2022, NR_TURNO==2)
-T1_18 <- subset(SE18, NR_TURNO==1)
-T2_18 <- subset(SE18, NR_TURNO==2)
-
-T1 <- merge(T1, T1_18[,c("id_secao","comparecimento_2018")], by="id_secao", all.x=T)
-T2 <- merge(T2, T2_18[,c("id_secao","comparecimento_2018")], by="id_secao", all.x=T)
-
-eleicao_2022 <- rbind(T1, T2)
 
 
 
@@ -234,14 +210,12 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NM_LOCAL_VOTACAO", "NR_SECAO
             "idade_16_17","idade_18_24","idade_60M",
             "biometria", "qt_biometria",
             "comparecimento_2022","abstencao_2022",
-            "comparecimento_2018",
             
-            "variacao_comparecimento_2018",
+            "variacao_comparecimento_2018_muni",
              
             "dist_sede", "closest_dist_any", "closest_dist",
             "num_0500", "num_1000","num_3000",
-            "num_5000","num_10000",
-            'zone',
+            "num_5000","num_10000", 'zone',
             "votos_lula", "votos_jair", "votos_total",
             "votos_nulo", "votos_branco", "votos_validos",
             "dummy_pt", "passe_livre","PIB_PC")
