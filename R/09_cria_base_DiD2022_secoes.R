@@ -170,22 +170,43 @@ summary(eleicao_2022$votos_total)
 
 # adicionar variacao de comparecimento em 2018 por secao  -------------------
 
-a <- merge(eleicao_2022,
-           SE18[, .(id_secao, variacao_comparecimento_2018)], 
-           by='id_secao', all.x = T)
+eleicao_2022 <- merge(eleicao_2022,
+                      SE18[, .(id_secao, NR_TURNO, comparecimento_2018, variacao_comparecimento_2018)], 
+                      by=c('id_secao', 'NR_TURNO'), all.x = T)
 
-# PESSIMO pareamento de secoes entre 2018 e 2022
+summary(eleicao_2022$comparecimento_2018)
+#> Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#>    0.00    0.75    0.80    0.79    0.84    1.00   67372 
+   
+# PESSIMO pareamento de secoes entre 2018 e 2022 !!!!!!!!!!!!!!!!!! 66666666666666666
 (unique(eleicao_2022$id_secao) %in% unique(SE18$id_secao) |>sum()) / nrow(eleicao_2022)
 # apenas 46%
 
 
+# adicionar comparecimento em 2018 por municipio  -------------------
+
+comparecimento_2018 <-   SE18[, .(comparecimento_2018_muni = weighted.mean(comparecimento_2018, w=QT_APTOS)),
+                                  by = .(CD_MUNICIPIO, NR_TURNO) ]
+
+summary(comparecimento_2018$comparecimento_2018_muni)
+#>   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#> 0.5273  0.7400  0.7869  0.7828  0.8321  0.9401 
+
+
+# merge
+eleicao_2022 <- merge(eleicao_2022,
+                      comparecimento_2018,
+                      by=c('CD_MUNICIPIO', 'NR_TURNO'), all.x = T)
+
+
 # adicionar variacao de comparecimento em 2018 por municipio  -------------------
 
-variacao_compar_2018_muni <- SE18[, .(variacao_comparecimento_2018_muni = weighted.mean(variacao_comparecimento_2018, 
-                                                                                        w=QT_APTOS)), 
+variacao_compar_2018_muni <- SE18[, .(variacao_comparecimento_2018_muni = weighted.mean(variacao_comparecimento_2018, w=QT_APTOS)), 
                                   by=CD_MUNICIPIO]
 
 summary(variacao_compar_2018_muni$variacao_comparecimento_2018_muni)
+#>      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+#> -0.236164 -0.026915 -0.012099 -0.018386 -0.003857  0.132907 
 
 # merge
 eleicao_2022 <- merge(eleicao_2022,
@@ -211,8 +232,10 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NM_LOCAL_VOTACAO", "NR_SECAO
             "biometria", "qt_biometria",
             "comparecimento_2022","abstencao_2022",
             
-            "variacao_comparecimento_2018_muni",
+            "comparecimento_2018", "comparecimento_2018_muni",
+            "variacao_comparecimento_2018", "variacao_comparecimento_2018_muni",
              
+            
             "dist_sede", "closest_dist_any", "closest_dist",
             "num_0500", "num_1000","num_3000",
             "num_5000","num_10000", 'zone',

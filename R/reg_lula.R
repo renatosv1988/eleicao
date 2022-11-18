@@ -138,14 +138,17 @@ df_sections[, num_1000_decile := cut(num_1000,
                                      ordered_result = TRUE,
                                      labels = 1:10) ]
 
-### rafa 66666 reg hete
-# density quantiles
+
+# elderly quantiles
 df_sections[, idade_60M_decile := cut(idade_60M,
-                                     breaks = quantile(idade_60M, na.rm=T,
-                                                       probs = seq(0, 1 , by = .1)),
-                                     include.lowest = TRUE,
-                                     ordered_result = TRUE,
-                                     labels = 1:10) ]
+                                      breaks = quantile(idade_60M, na.rm=T,
+                                                        probs = seq(0, 1 , by = .1)),
+                                      include.lowest = TRUE,
+                                      ordered_result = TRUE,
+                                      labels = 1:10) ]
+
+summary(df_sections$idade_60M)
+table(df_sections$idade_60M_decile)
 
 
 

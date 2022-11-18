@@ -152,6 +152,17 @@ df_sections[, num_1000_decile := cut(num_1000,
                                        ordered_result = TRUE,
                                        labels = 1:10) ]
 
+# elderly quantiles
+df_sections[, idade_60M_decile := cut(idade_60M,
+                                      breaks = quantile(idade_60M, na.rm=T,
+                                                        probs = seq(0, 1 , by = .1)),
+                                      include.lowest = TRUE,
+                                      ordered_result = TRUE,
+                                      labels = 1:10) ]
+
+summary(df_sections$idade_60M)
+table(df_sections$idade_60M_decile)
+
 
 # add regions
 regions <- geobr::read_region()
@@ -184,7 +195,7 @@ df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)
                            educacao_1 = weighted.mean(x=educacao_1, w=QT_APTOS, na.rm=T),
                            SG_UF = SG_UF[1L],
                            name_region = name_region[1L], 
-                           variacao_comparecimento_2018 = variacao_comparecimento_2018[1L],
+                           variacao_comparecimento_2018_muni = variacao_comparecimento_2018_muni[1L],
                            gov_2t = max(gov_2t),
                            pib_log = log(PIB_PC)[1L],
                            passe_livre = max(passe_livre), 
@@ -234,14 +245,9 @@ setcolorder(b, 'variable')
 
 
 # ipw balancing ----------------------------------------------------------------------
-df_muni$biometria
-df_muni$variacao_comparecimento_2018
-df_muni$votos_jair_muni_validos_p
-# rogerio 666
- df_sections[, mean(variacao_comparecimento_2018), by = NR_TURNO]
+summary(df_muni$variacao_comparecimento_2018)
 
-
-step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + votos_jair_muni_validos_p + biometria + gov_2t  , # + mean_dens_1000, 
+step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + name_region + votos_jair_muni_validos_p + biometria + gov_2t  , # + mean_dens_1000, 
              family = binomial(link = 'logit'),
              data = df_muni)
 

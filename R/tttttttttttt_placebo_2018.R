@@ -1,3 +1,5 @@
+# remover municipios que SEMPRE tiveram passe livre, mesmo antes das eleicoes
+# isso só deve afetar analise do 1o turno, mas mesmo assim importa
 
 library(data.table)
 library(dplyr)
@@ -14,10 +16,7 @@ options(scipen = 999)
 
 # read data ----------------------------------------------------------------------
 
-BD <- fread("../../data/base_DiD2022_secoes.csv")
-
-
-summary(BD$variacao_comparecimento_2018)
+BD <- fread("../../data/base_DiD2018_secoes.csv")
 
 
 
@@ -153,6 +152,17 @@ df_sections[, num_1000_decile := cut(num_1000,
                                      ordered_result = TRUE,
                                      labels = 1:10) ]
 
+# elderly quantiles
+df_sections[, idade_60M_decile := cut(idade_60M,
+                                      breaks = quantile(idade_60M, na.rm=T,
+                                                        probs = seq(0, 1 , by = .1)),
+                                      include.lowest = TRUE,
+                                      ordered_result = TRUE,
+                                      labels = 1:10) ]
+
+summary(df_sections$idade_60M)
+table(df_sections$idade_60M_decile)
+
 
 # add regions
 regions <- geobr::read_region()
@@ -176,16 +186,17 @@ df_sections$votos_validos
 # aggregate variables at muni level
 df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T),
                            QT_APTOS_log = log(sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)),
-                           biometria = weighted.mean(x=biometria, w=QT_APTOS, na.rm=T),
-                           qt_biometria = sum(qt_biometria[which(NR_TURNO==2)], na.rm=T),
+                           # biometria = weighted.mean(x=biometria, w=QT_APTOS, na.rm=T),
+                           # qt_biometria = sum(qt_biometria[which(NR_TURNO==2)], na.rm=T),
                            votos_jair_muni_total_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_total[which(NR_TURNO==1)]),
                            votos_jair_muni_validos_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_validos[which(NR_TURNO==1)]),
                            mean_dist = mean(dist_sede, na.rm=T),
                            mean_dens_1000 = mean(num_1000, na.rm=T),
-                           educacao_1 = weighted.mean(x=educacao_1, w=QT_APTOS, na.rm=T),
+                           # educacao_1 = weighted.mean(x=educacao_1, w=QT_APTOS, na.rm=T),
                            SG_UF = SG_UF[1L],
                            name_region = name_region[1L], 
-                           variacao_comparecimento_2018 = variacao_comparecimento_2018[1L],
+                           comparecimento_2018_muni = weighted.mean(comparecimento_2018, w=QT_APTOS),                           
+                           variacao_comparecimento_2018_muni = weighted.mean(variacao_comparecimento_2018, w=QT_APTOS), 
                            gov_2t = max(gov_2t),
                            pib_log = log(PIB_PC)[1L],
                            passe_livre = max(passe_livre), 
@@ -235,14 +246,9 @@ setcolorder(b, 'variable')
 
 
 # ipw balancing ----------------------------------------------------------------------
-df_muni$biometria
-df_muni$variacao_comparecimento_2018
-df_muni$votos_jair_muni_validos_p
-# rogerio 666
-df_sections[, mean(variacao_comparecimento_2018), by = NR_TURNO]
+summary(df_muni$variacao_comparecimento_2018)
 
-
-step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + name_region + biometria + votos_jair_muni_validos_p + gov_2t  , # + mean_dens_1000, 
+step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + name_region + votos_jair_muni_validos_p + gov_2t  , # + mean_dens_1000, 
              family = binomial(link = 'logit'),
              data = df_muni)
 
@@ -284,8 +290,8 @@ setcolorder(c, 'variable')
 # merge ipw info of muni to sections
 setDT(df_sections)[df_muni, on='code_muni', ipw := i.ipw]
 
-# reg variacao_comparecimento_2018
-step2 <- fixest::feols(comparecimento_2018~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+# reg
+step2 <- fixest::feols(comparecimento_2018 ~ turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                        fixef = 'id_secao', 
                        cluster = 'code_muni',
                        weights = ~ipw,
