@@ -6,24 +6,27 @@ library(httr)
 
 
 
-#### eleitorado ZONA  ----------------------------------------------------------
-#' perfil de escolaridade em cada zona
-#' https://dadosabertos.tse.jus.br/dataset/eleitorado-2022
+#' #### eleitorado ZONA  ----------------------------------------------------------
+#' #' perfil de escolaridade em cada zona
+#' #' https://dadosabertos.tse.jus.br/dataset/eleitorado-2022
+#' 
+#' # create dir
+#' dir.create('../../data_raw')
+#' dir_eleitorado <- '../../data_raw/eleitorado'
+#' dir.create(dir_eleitorado)
+#' 
+#' # download data
+#' download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/perfil_eleitorado/perfil_eleitorado_2022.zip",
+#'               destfile = paste0(dir_eleitorado, "/eleitorado_2022.zip"))
+#' download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/perfil_eleitorado/perfil_eleitorado_2018.zip",
+#'               destfile = paste0(dir_eleitorado, "/eleitorado_2018.zip"))
+#' 
+#' # unzip data to local dir
+#' unzip(paste0(dir_eleitorado, "/eleitorado_2022.zip"), exdir = dir_eleitorado)
+#' unzip(paste0(dir_eleitorado, "/eleitorado_2018.zip"), exdir = dir_eleitorado)
+# 666 delete this. I think we don't use this data because we get the same info from 'eleitorado SECAO'
 
-# create dir
-dir.create('../../data_raw')
-dir_eleitorado <- '../../data_raw/eleitorado'
-dir.create(dir_eleitorado)
 
-# download data
-download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/perfil_eleitorado/perfil_eleitorado_2022.zip",
-              destfile = paste0(dir_eleitorado, "/eleitorado_2022.zip"))
-download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/perfil_eleitorado/perfil_eleitorado_2018.zip",
-              destfile = paste0(dir_eleitorado, "/eleitorado_2018.zip"))
-
-# unzip data to local dir
-unzip(paste0(dir_eleitorado, "/eleitorado_2022.zip"), exdir = dir_eleitorado)
-unzip(paste0(dir_eleitorado, "/eleitorado_2018.zip"), exdir = dir_eleitorado)
 
 
 #### eleitorado SECAO  ----------------------------------------------------------
