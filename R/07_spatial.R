@@ -23,10 +23,21 @@ options(scipen = 999)
 
 #### read electoral sections data --------------------------------------------------
 
+# unzip data
+temp_dir_1 <- tempdir()
+all_zip_files <- list.files("../../data_raw/zonas", full.names = T, pattern = '.zip')
+temp_zip <- all_zip_files[all_zip_files %like% 2022]
+files <- unzip(temp_zip, list=T)$Name
+path_csv_T1  <- files[files %like% '.csv']
+unzip(temp_zip, files  = path_csv_T1, exdir = temp_dir_1)
+path_csv <- paste0(temp_dir_1,'/',path_csv_T1)
 
 # read data
-files_zonas <- list.files(path = '../../data_raw/zonas', pattern = '.csv', full.names = T)
-zonas <- fread( files_zonas[ files_zonas%like% 2022], nrows = Inf)
+zonas <- fread( path_csv)
+
+# remove temp files
+unlink(temp_dir_1, recursive = T)
+gc()
 
 # remove zonas fora do Brasil
 zonas <- subset(zonas, SG_UF != 'ZZ')

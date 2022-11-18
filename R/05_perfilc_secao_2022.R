@@ -11,7 +11,7 @@ my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
 
 # create list of results
 AG <- list()
-for(i in my_uf){ # i <- "AM"
+for(i in my_uf){ # i <- "AC"
  
  # unzip data
  temp_dir_1 <- tempdir()
