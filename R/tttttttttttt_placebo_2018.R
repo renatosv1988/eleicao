@@ -68,28 +68,6 @@ df_sections[, turno2_dummy := fifelse(NR_TURNO==2, 1, 0)]
 
 # recode variables ----------------------------------------------------------------------
 
-# 
-# # create unique id for voting place
-# df_sections[, id_secao := paste(code_muni, NR_ZONA, NR_LOCAL_VOTACAO)]
-# head(df_sections$id_secao)
-# 
-# 
-# # aggregate by voting place
-# df_place <- df_sections[, .(QT_APTOS = sum(QT_APTOS),
-#                           QT_APTOS_log = log(sum(QT_APTOS)),
-#                           pib_log = log(PIB_PC[1L]),
-#                           votos_jair = sum(votos_jair),
-#                           votos_lula = sum(votos_lula),
-#                           votos_total = sum(votos_total),
-#                           num_1000 = mean(num_1000),
-#                           passe_livre_2 = passe_livre_2[1L],
-#                           educacao_1 = weighted.mean(educacao_1, w=QT_APTOS, na.rm=T),
-#                           comparecimento_2022 = weighted.mean(comparecimento_2022, w=QT_APTOS)
-#                           ), 
-#                       by = .(id_secao, turno2_dummy, code_muni)]
-# 
-# head(df_place)
-
 # discretize edu
 my_breaks <- seq(0, 0.7, by=.1)
 my_breaks <- c(my_breaks, 1)
@@ -164,19 +142,6 @@ summary(df_sections$idade_60M)
 table(df_sections$idade_60M_decile)
 
 
-# add regions
-regions <- geobr::read_region()
-regions$geom <- NULL
-
-# # add region to place data
-# df_place[, code_region := substring(code_muni, 1, 1) |> as.numeric() ]
-# df_place <- left_join(df_place, regions, by=c('code_region'))
-# table(df_place$name_region, df_place$passe_livre_2)
-
-# add region to section data
-df_sections[, code_region := substring(code_muni, 1, 1) |> as.numeric() ]
-df_sections <- left_join(df_sections, regions, by=c('code_region'))
-table(df_sections$name_region, df_sections$passe_livre_2)
 
 
 

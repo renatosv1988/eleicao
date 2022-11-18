@@ -5,6 +5,7 @@ library(scales)
 library(fixest)
 library(vroom)
 library(purrr)
+library(dplyr)
 
 `%nin%` <- negate(`%in%`)
 `%unlike%` <- negate(`%like%`)
@@ -75,6 +76,8 @@ table(eleicao_2018$dummy_pt, useNA = 'always')
 #>  262678 643930      0 
 
 
+
+
 # MERGE perfil -----------------------------------------------------------------
 perfil[, mulheres := mulher / qt_perfil ]
 perfil[, educacao_1 := educ_prim / qt_perfil ]
@@ -134,6 +137,15 @@ summary(eleicao_2018$PIB_PC)
 
 
 
+# add regions  -----------------------------------------------------------------
+regions <- geobr::read_region()
+regions$geom <- NULL
+
+# add region to section data
+eleicao_2018[, code_region := substring(code_muni, 1, 1) |> as.numeric() ]
+eleicao_2018 <- left_join(eleicao_2018, regions, by=c('code_region'))
+table(eleicao_2018$name_region)
+
 
 # adicionar votação por candidato ----------------------------------------------
 
@@ -170,8 +182,6 @@ summary(eleicao_2018$comparecimento_2018)
 
 # adicionar variacao de comparecimento por municipio em 2018 -------------------
 
-
-
 # separar por turno
 T1 <- eleicao_2018[NR_TURNO==1,]
 T2 <- eleicao_2018[NR_TURNO==2,]
@@ -202,7 +212,7 @@ summary(eleicao_2018$variacao_comparecimento_2018)
 my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
             "ANO_ELEICAO","NR_TURNO", "SG_UF","CD_CARGO",
             
-            "code_muni",
+            "code_muni", "name_region",
             
             "QT_APTOS","QT_COMPARECIMENTO","QT_ABSTENCOES","QT_VOTOS_NOMINAIS",
             "QT_VOTOS_BRANCOS","QT_VOTOS_NULOS", "QT_VOTOS_LEGENDA",

@@ -145,8 +145,18 @@ summary(eleicao_2022$PIB_PC)
 
 
 
+# add regions  -----------------------------------------------------------------
+regions <- geobr::read_region()
+regions$geom <- NULL
 
-# adicionar votação por candidato ----------------------------------------------
+# add region to section data
+eleicao_2022[, code_region := substring(code_muni, 1, 1) |> as.numeric() ]
+eleicao_2022 <- left_join(eleicao_2022, regions, by=c('code_region'))
+table(eleicao_2022$name_region)
+
+
+
+# adicionar votacao por candidato ----------------------------------------------
 
 # merge data
 # separa bases por turno
@@ -243,7 +253,7 @@ summary(eleicao_2022$variacao_comparecimento_2018_muni)
 my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NM_LOCAL_VOTACAO", "NR_SECAO",
             "ANO_ELEICAO","NR_TURNO", "SG_UF", "NM_MUNICIPIO", "CD_CARGO",
             
-            "code_muni",
+            "code_muni", "name_region",
             
             "QT_APTOS","QT_COMPARECIMENTO","QT_ABSTENCOES","QT_VOTOS_NOMINAIS",
             "QT_VOTOS_BRANCOS","QT_VOTOS_NULOS", "QT_VOTOS_LEGENDA",
