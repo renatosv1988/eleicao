@@ -15,28 +15,27 @@ options(scipen = 999)
 
 # read data ----------------------------------------------------------------------
 
-BD <- fread("../../data/base_DiD2022_secoes.csv")
-
+df_secoes_2022 <- fread("../../data/base_DiD2022_secoes.csv")
 
 
 # Select observations ----------------------------------------------------------------------
 
 # excluir seções de cidades sem sistema de ônibus
-BD <- subset(BD, dummy_pt==1)
-BD[, table(NR_TURNO, dummy_pt)]
-BD[, table(NR_TURNO, passe_livre)]
+df_secoes_2022 <- subset(df_secoes_2022, dummy_pt==1)
+df_secoes_2022[, table(NR_TURNO, dummy_pt)]
+df_secoes_2022[, table(NR_TURNO, passe_livre)]
 
 
 # identify treated in the 1st round
-BD[, passe_livre_1 := max(NR_TURNO==1 & passe_livre==1), by = id_secao]
-table(BD$passe_livre_1)
+df_secoes_2022[, passe_livre_1 := max(NR_TURNO==1 & passe_livre==1), by = id_secao]
+table(df_secoes_2022$passe_livre_1)
 
-BD[, table(NR_TURNO, passe_livre_1)]
+df_secoes_2022[, table(NR_TURNO, passe_livre_1)]
 
-BD[NR_TURNO==2, table(passe_livre_1, passe_livre)]
+df_secoes_2022[NR_TURNO==2, table(passe_livre_1, passe_livre)]
 
 # drop always treated
-df_sections <- BD[ passe_livre_1 != 1]
+df_sections <- df_secoes_2022[ passe_livre_1 != 1]
 df_sections[, table(NR_TURNO, passe_livre_1)]
 
 
@@ -54,26 +53,6 @@ df_sections[, votos_lula_total_p := sum(votos_lula) / sum(votos_total), by = .(i
 df_sections[, votos_lula_validos_p := sum(votos_lula) / sum(votos_validos), by = .(id_secao, NR_TURNO)]
 summary(df_sections$votos_lula_validos_p)
 
- # # create unique id for voting place
-# df_sections[, id_secao := paste(code_muni, NR_ZONA, NR_LOCAL_VOTACAO)]
-# head(df_sections$id_secao)
-# 
-# 
-# # aggregate by voting place
-# df_place <- df_sections[, .(QT_APTOS = sum(QT_APTOS),
-#                           QT_APTOS_log = log(sum(QT_APTOS)),
-#                           pib_log = log(PIB_PC[1L]),
-#                           votos_jair = sum(votos_jair),
-#                           votos_lula = sum(votos_lula),
-#                           votos_total = sum(votos_total),
-#                           num_1000 = mean(num_1000),
-#                           passe_livre_2 = passe_livre_2[1L],
-#                           educacao_1 = weighted.mean(educacao_1, w=QT_APTOS, na.rm=T),
-#                           comparecimento_2022 = weighted.mean(comparecimento_2022, w=QT_APTOS)
-#                           ), 
-#                       by = .(id_secao, turno2_dummy, code_muni)]
-# 
-# head(df_place)
 
 # discretize edu
 my_breaks <- seq(0, 0.7, by=.1)
@@ -152,15 +131,6 @@ table(df_sections$idade_60M_decile)
 
 
 
-# add regions
-regions <- geobr::read_region()
-regions$geom <- NULL
-
-# add region to section data
-df_sections[, code_region := substring(code_muni, 1, 1) |> as.numeric() ]
-df_sections <- left_join(df_sections, regions, by=c('code_region'))
-table(df_sections$name_region, df_sections$passe_livre_2)
-
 
 # aggregate variables at muni level
 df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T),
@@ -169,16 +139,19 @@ df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)
                            qt_biometria = sum(qt_biometria[which(NR_TURNO==2)], na.rm=T),
                            votos_jair_muni_total_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_total[which(NR_TURNO==1)]),
                            votos_jair_muni_validos_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_validos[which(NR_TURNO==1)]),
-                           mean_dist = mean(dist_sede, na.rm=T),
-                           mean_dens_1000 = mean(num_1000, na.rm=T),
+                           mean_dist = weighted.mean(x=dist_sede, w=QT_APTOS, na.rm=T),      # pondera ou nao ?
+                           mean_dens_1000 = weighted.mean(x=num_1000, w=QT_APTOS, na.rm=T),  # pondera ou nao ?
                            educacao_1 = weighted.mean(x=educacao_1, w=QT_APTOS, na.rm=T),
                            SG_UF = SG_UF[1L],
                            name_region = name_region[1L],
                            variacao_comparecimento_2018 = variacao_comparecimento_2018[1L],
                            gov_2t = max(gov_2t),
+                           PIB_PC = PIB_PC[1L],
                            pib_log = log(PIB_PC)[1L],
                            passe_livre_2 = max(passe_livre_2)), 
-                       by=code_muni]
+                       by= .(SG_UF, name_region, code_muni, variacao_comparecimento_2018_muni)]
+
+
 
 
 head(df_muni)
@@ -222,13 +195,14 @@ setcolorder(b, 'variable')
 
 
 # ipw balancing ----------------------------------------------------------------------
-# 6666 incluir  name_region ??? melhora ipw
+summary(df_muni$variacao_comparecimento_2018_muni)
+summary(df_muni$votos_jair_muni_validos_p)
+summary(df_muni$biometria)
+table(df_muni$name_region)
 
-# df_muni$biometria
-# df_muni$variacao_comparecimento_2018
-# 666 dropa prsidios em 2018 RAFA
+# 666 definir ipw
 
-step1 <- glm(passe_livre_2 ~ QT_APTOS_log + pib_log + name_region + variacao_comparecimento_2018 + biometria + votos_jair_muni_validos_p + gov_2t , # + mean_dens_1000, 
+step1 <- glm(passe_livre_2 ~ gov_2t + QT_APTOS_log + pib_log + name_region + variacao_comparecimento_2018_muni+ votos_jair_muni_validos_p + gov_2t , # + mean_dens_1000, 
              family = binomial(link = 'logit'),
              data = df_muni)
 
@@ -309,6 +283,22 @@ ggplot() +
  theme_classic()
 
 
+
+
+
+# PT votes in 2018 6666666666666666666666
+df_secoes_2018 <- fread("../../data/base_DiD2018_secoes.csv")
+df_secoes_2018[, votos_lula_2018_p := sum(votos_lula) / sum(votos_validos), by = .(id_secao, NR_TURNO)]
+temp_2018 <- df_secoes_2018[, .(id_secao, NR_TURNO, votos_lula_2018_p)]
+head(temp_2018)
+df_secoes_2022 <- merge(df_secoes_2022, temp_2018, by=c("NR_TURNO", "id_secao"), all.x = T)
+
+step2 <- fixest::feols(votos_lula_2018_p ~ turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
+                       fixef = 'id_secao', 
+                       cluster = 'code_muni',
+                       weights = ~ipw,
+                       data = df_sections)
+summary(step2)
 
 
 # Model 2. URBAN vs RURAL  ------------------------------------------
