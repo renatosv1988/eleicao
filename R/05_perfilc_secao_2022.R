@@ -11,10 +11,23 @@ my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
 
 # create list of results
 AG <- list()
-for(i in 1:27){ # i <- 1
+for(i in my_uf){ # i <- "AM"
+ 
+ # unzip data
+ temp_dir_1 <- tempdir()
+ all_zip_files <- list.files("../../data_raw/eleitorado_secao", full.names = T)
+ temp_zip <- all_zip_files[all_zip_files %like% paste0('_',i,'_')]
+ files <- unzip(temp_zip, list=T)$Name
+ path_csv_T1  <- files[files %like% '.csv']
+ unzip(temp_zip, files  = path_csv_T1, exdir = temp_dir_1)
+ path_csv <- paste0(temp_dir_1,'/',path_csv_T1)
  
  # read data
- DF <- fread(paste0("../../data_raw/eleitorado_secao/perfil_eleitor_secao_2022_",my_uf[i],".csv"))
+ DF <- fread(path_csv)
+ 
+ # remove temp files
+ unlink(temp_dir_1, recursive = T)
+ gc()
  
  # recode
  DF[, mulher := fifelse(CD_GENERO %in% 4, QT_ELEITORES_PERFIL, 0)]
