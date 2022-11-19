@@ -49,9 +49,23 @@ passe_livre$`2º Turno`[is.na(passe_livre$`2º Turno`)] <- 0
 # remove SUMARÉ (NA both rounds)
 passe_livre <- passe_livre[!passe_livre$city_uf_ID=="SUMARE - SP",]
 
+# considerar municípios que tem passe livre sempre
+sempre_livre <- read_excel("../../data_raw/passe_livre/Passe Livre nas Eleições.xlsx", range = "B427:C480")
+sempre_livre$city_uf_ID <- paste(sempre_livre$Cidade, sempre_livre$Estado, sep =" - ")
+sempre_livre$city_uf_ID <- iconv(sempre_livre$city_uf_ID, from = "UTF-8", to = "ASCII//TRANSLIT")
+sempre_livre$city_uf_ID <- toupper(sempre_livre$city_uf_ID)
+sempre_livre$city_uf_ID <- gsub("ARTHUR NOGUEIRA - SP","ARTUR NOGUEIRA - SP",sempre_livre$city_uf_ID)
+sempre_livre <- merge(sempre_livre, municipios[,c("city_uf_ID", "CD_MUNICIPIO")], by= "city_uf_ID", all.x = T)
+municipios_sempre_livre <- sempre_livre$CD_MUNICIPIO
+passe_livre$`1º Turno`[passe_livre$CD_MUNICIPIO%in%municipios_sempre_livre] <- 1
+passe_livre$`2º Turno`[passe_livre$CD_MUNICIPIO%in%municipios_sempre_livre] <- 1
+
 # criar versão simplificada do arquivo
 passe_livre_resumo <- passe_livre[,c("CD_MUNICIPIO", "1º Turno","2º Turno")]
 colnames(passe_livre_resumo) <- c("CD_MUNICIPIO", "passe_livre_t1","passe_livre_t2")
+
+sum(as.numeric(passe_livre_resumo$passe_livre_t1))
+sum(as.numeric(passe_livre_resumo$passe_livre_t2))
 
 # save
 dir_passe_livre <- '../../data/passe_livre'

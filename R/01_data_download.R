@@ -53,6 +53,29 @@ unzip(paste0(dir_eleitorado, paste0("/eleitorado_",my_uf[i],"_2022.zip")), exdir
 
 
 
+#### eleitorado secao (perfil 2018) --------------------------------------------
+#' perfil de escolaridade em cada zona
+#' https://dadosabertos.tse.jus.br/dataset/eleitorado-2018
+
+# create dir
+dir_eleitorado <- '../../data_raw/eleitorado_secao_2018'
+dir.create(dir_eleitorado)
+
+# download data
+my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
+           "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO")
+
+for(i in 1:27){
+ download.file(paste0("https://cdn.tse.jus.br/estatistica/sead/odsele/perfil_eleitor_secao/perfil_eleitor_secao_2018_",
+                      my_uf[i],".zip"),
+               destfile = paste0(dir_eleitorado, paste0("/eleitorado_",my_uf[i],"_2018.zip")))
+}
+for(i in 1:27){
+ # unzip data to local dir
+ unzip(paste0(dir_eleitorado, paste0("/eleitorado_",my_uf[i],"_2018.zip")), exdir = dir_eleitorado)
+}
+
+
 #### zonas (spatial) --------------------------------------------------
 #' quantidade de eleitores registrados em cada secao e cada zona
 #' https://dadosabertos.tse.jus.br/dataset/eleitorado-2022

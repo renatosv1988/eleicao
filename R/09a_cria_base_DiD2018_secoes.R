@@ -18,7 +18,7 @@ espacial <- fread('../../data/spatial/electoral_sections_spatial.csv')
 munic <- fread('../../data/munic/munic_dummy_pt.csv')
 corr_ibge_tse <- fread("../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv", encoding = "UTF-8")
 pib <- fread("../../data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8")
-perfil <- fread('../../data/secoes/secoes_perfil_2022.csv')
+perfil <- fread('../../data/secoes/secoes_perfil_2018.csv')
 votos_T1 <- fread('../../data/votes_2018/votos_T1.csv')
 votos_T2 <- fread('../../data/votes_2018/votos_T2.csv')
 
@@ -51,9 +51,11 @@ nrow(eleicao_2018)
 
 # MERGE spatial info --------------------------------------------------
 espacial[,id_secao := paste(CD_MUNICIPIO, NR_ZONA, NR_SECAO)]
-espacial <- espacial[,c("dist_sede", "closest_dist_any", "closest_dist", "num_0500",
+espacial <- espacial[,c("dist_sede",
+                         "closest_dist_any", "closest_dist", "num_0500",
                         "num_1000", "num_3000","num_5000","num_10000",
-                        "id_secao", 'zone')]
+                        "id_secao", 'zone'
+                        )]
 eleicao_2018 <- merge(eleicao_2018, espacial, by="id_secao", all.x = T)
 
 summary(eleicao_2018$num_1000)
@@ -225,7 +227,8 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
             
             "variacao_comparecimento_2018",  
             
-            "dist_sede", "closest_dist_any", "closest_dist",
+            "dist_sede",
+            "closest_dist_any", "closest_dist",
             "num_0500", "num_1000","num_3000",
             "num_5000","num_10000", 'zone',
             "votos_lula", "votos_jair", "votos_total",
