@@ -53,7 +53,7 @@ for(i in my_uf){ # i <- "AC"
   qt_biometria = sum(QT_ELEITORES_BIOMETRIA)), 
   by = .(CD_MUNICIPIO, NR_ZONA, NR_SECAO, id_secao)]
  
- cat(my_uf[i], " ")
+ cat(i, " ")
 }
  
 # BR <- do.call(rbind, AG)

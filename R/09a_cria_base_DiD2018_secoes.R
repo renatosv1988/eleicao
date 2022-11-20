@@ -95,11 +95,11 @@ eleicao_2018 <- merge(eleicao_2018, perfil[,c("id_secao","mulheres","educacao_1"
 
 summary(eleicao_2018$educacao_1)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-#>   0.000   0.294   0.419   0.423   0.552   1.000   14482 
+#>  0.0000  0.3291  0.4759  0.4735  0.6215  1.0000     500 
 
 # proportion of missing
 eleicao_2018[ is.na(educacao_1) , .N] / nrow(eleicao_2018)
-#> 0.01597383
+#> 0.0005515063
 
 
 # MERGE PASSE LIVRE ------------------------------------------------------------
@@ -108,10 +108,11 @@ eleicao_2018[ is.na(educacao_1) , .N] / nrow(eleicao_2018)
 t1 <- subset(eleicao_2018, NR_TURNO==1)
 t2 <- subset(eleicao_2018, NR_TURNO==2)
 
-passe_livre_t1 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t1")]
-colnames(passe_livre_t1) <-c("CD_MUNICIPIO", "passe_livre") 
-passe_livre_t2 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t2")]
-colnames(passe_livre_t2) <-c("CD_MUNICIPIO", "passe_livre") 
+passe_livre_t1 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t1", "passe_livre_always")]
+colnames(passe_livre_t1) <-c("CD_MUNICIPIO", "passe_livre", "passe_livre_always") 
+
+passe_livre_t2 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t2", "passe_livre_always")]
+colnames(passe_livre_t2) <-c("CD_MUNICIPIO", "passe_livre", "passe_livre_always") 
 
 # merge data
 t1 <- merge(t1, passe_livre_t1, by="CD_MUNICIPIO", all.x = T)
@@ -126,8 +127,11 @@ eleicao_2018[is.na(passe_livre), passe_livre := 0]
 
 table(eleicao_2018$passe_livre, useNA = 'always')
 #>       0      1   <NA> 
-#>  631783 274825      0 
+#>  628968 277640      0 
 
+table(eleicao_2018$passe_livre_always, useNA = 'always')
+#>     1   <NA> 
+#>  4094 902514 
 
 
 # MERGE PIB_PC 2019 ------------------------------------------------------------
@@ -233,7 +237,7 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
             "num_5000","num_10000", 'zone',
             "votos_lula", "votos_jair", "votos_total",
             "votos_nulo" , "votos_validos", "votos_branco", 
-            "dummy_pt", "passe_livre","PIB_PC")
+            "dummy_pt", "passe_livre", "passe_livre_always", "PIB_PC")
 
 eleicao_2018 <- eleicao_2018[, ..my_var]
 

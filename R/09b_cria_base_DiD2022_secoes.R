@@ -111,10 +111,11 @@ summary(eleicao_2022$educacao_1)
 t1 <- subset(eleicao_2022, NR_TURNO==1)
 t2 <- subset(eleicao_2022, NR_TURNO==2)
 
-passe_livre_t1 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t1")]
-colnames(passe_livre_t1) <-c("CD_MUNICIPIO", "passe_livre") 
-passe_livre_t2 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t2")]
-colnames(passe_livre_t2) <-c("CD_MUNICIPIO", "passe_livre") 
+passe_livre_t1 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t1", "passe_livre_always")]
+colnames(passe_livre_t1) <-c("CD_MUNICIPIO", "passe_livre", "passe_livre_always") 
+
+passe_livre_t2 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t2", "passe_livre_always")]
+colnames(passe_livre_t2) <-c("CD_MUNICIPIO", "passe_livre", "passe_livre_always") 
 
 # merge data
 t1 <- merge(t1, passe_livre_t1, by="CD_MUNICIPIO", all.x = T)
@@ -129,9 +130,12 @@ eleicao_2022[is.na(passe_livre), passe_livre := 0]
 
 table(eleicao_2022$passe_livre, useNA = 'always')
 #>       0      1   <NA> 
-#>  655349 285583      0 
+#>  652313 288619      0 
 
 
+table(eleicao_2022$passe_livre_always, useNA = 'always')
+#>     1   <NA> 
+#>  4420 936512 
 
 
 
@@ -274,7 +278,7 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NM_LOCAL_VOTACAO", "NR_SECAO
             "num_5000","num_10000", 'zone',
             "votos_lula", "votos_jair", "votos_total",
             "votos_nulo", "votos_branco", "votos_validos",
-            "dummy_pt", "passe_livre","PIB_PC")
+            "dummy_pt", "passe_livre", "passe_livre_always", "PIB_PC")
 
 eleicao_2022 <- eleicao_2022[, ..my_var]
 

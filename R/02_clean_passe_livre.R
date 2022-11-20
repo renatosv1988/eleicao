@@ -65,8 +65,12 @@ passe_livre_sempre[, city_uf_ID := str_squish(city_uf_ID)]
 # typos
 passe_livre[, city_uf_ID := gsub("SANTO ANTONIO DA POSSE","SANTO ANTONIO DE POSSE", city_uf_ID)]
 passe_livre[, city_uf_ID := gsub("SAO LUIZ DO PARAITINGA","SAO LUIS DO PARAITINGA", city_uf_ID)]
+passe_livre[, city_uf_ID := gsub("ARTHUR NOGUEIRA - SP","ARTUR NOGUEIRA - SP", city_uf_ID)]
 passe_livre_sempre[, city_uf_ID := gsub("SANTO ANTONIO DA POSSE","SANTO ANTONIO DE POSSE", city_uf_ID)]
 passe_livre_sempre[, city_uf_ID := gsub("SAO LUIZ DO PARAITINGA","SAO LUIS DO PARAITINGA", city_uf_ID)]
+passe_livre_sempre[, city_uf_ID := gsub("ARTHUR NOGUEIRA - SP","ARTUR NOGUEIRA - SP", city_uf_ID)]
+
+
 
 
 # Update of munis with passe livre all year

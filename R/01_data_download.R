@@ -70,10 +70,6 @@ for(i in 1:27){
                       my_uf[i],".zip"),
                destfile = paste0(dir_eleitorado, paste0("/eleitorado_",my_uf[i],"_2018.zip")))
 }
-for(i in 1:27){
- # unzip data to local dir
- unzip(paste0(dir_eleitorado, paste0("/eleitorado_",my_uf[i],"_2018.zip")), exdir = dir_eleitorado)
-}
 
 
 #### zonas (spatial) --------------------------------------------------
