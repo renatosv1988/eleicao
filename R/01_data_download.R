@@ -261,6 +261,20 @@ for(i in 1:27){# i <- 26
 dir_sp <- '../../data_raw/sp'
 dir.create(dir_sp)
 
+files_2018 <- c("https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/02092018.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/09092018.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/16092018.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/23092018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/30092018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/07102018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/14102018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/21102018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/28102018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/04112018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/11112018_Dados%20para%20Transpar%C3%AAncia.xls")
+
+
+
 files <- c("https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/04SET2022.xls",
            "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/11SET2022.xls",
            "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/18SET2022.xls",
@@ -269,6 +283,12 @@ files <- c("https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/04SET2022
            "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/09OUT2022.xls",
            "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/16OUT2022.xls",
            "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/23OUT2022.xls")
+
+my_dates18 <- seq.Date(from=as.Date("2018-09-02"), to=as.Date("2022-11-11"), by="7 days")
+for(i in 1:length(files_2018)){ #i<-1
+ download.file(files_2018[i],
+               destfile = paste0(dir_sp, paste0("/", my_dates18[i], ".xls")))
+}
 
 my_dates <- seq.Date(from=as.Date("2022-09-04"), to=as.Date("2022-10-23"), by="7 days")
 for(i in 1:length(files)){ #i<-1
