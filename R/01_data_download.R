@@ -53,6 +53,29 @@ unzip(paste0(dir_eleitorado, paste0("/eleitorado_",my_uf[i],"_2022.zip")), exdir
 
 
 
+#### eleitorado secao (perfil 2018) --------------------------------------------
+#' perfil de escolaridade em cada zona
+#' https://dadosabertos.tse.jus.br/dataset/eleitorado-2018
+
+# create dir
+dir_eleitorado <- '../../data_raw/eleitorado_secao_2018'
+dir.create(dir_eleitorado)
+
+# download data
+my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
+           "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO")
+
+for(i in 1:27){
+ download.file(paste0("https://cdn.tse.jus.br/estatistica/sead/odsele/perfil_eleitor_secao/perfil_eleitor_secao_2018_",
+                      my_uf[i],".zip"),
+               destfile = paste0(dir_eleitorado, paste0("/eleitorado_",my_uf[i],"_2018.zip")))
+}
+for(i in 1:27){
+ # unzip data to local dir
+ unzip(paste0(dir_eleitorado, paste0("/eleitorado_",my_uf[i],"_2018.zip")), exdir = dir_eleitorado)
+}
+
+
 #### zonas (spatial) --------------------------------------------------
 #' quantidade de eleitores registrados em cada secao e cada zona
 #' https://dadosabertos.tse.jus.br/dataset/eleitorado-2022
@@ -238,6 +261,20 @@ for(i in 1:27){# i <- 26
 dir_sp <- '../../data_raw/sp'
 dir.create(dir_sp)
 
+files_2018 <- c("https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/02092018.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/09092018.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/16092018.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/23092018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/30092018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/07102018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/14102018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/21102018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/28102018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/04112018_Dados%20para%20Transpar%C3%AAncia.xls",
+                "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/11112018_Dados%20para%20Transpar%C3%AAncia.xls")
+
+
+
 files <- c("https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/04SET2022.xls",
            "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/11SET2022.xls",
            "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/18SET2022.xls",
@@ -246,6 +283,12 @@ files <- c("https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/04SET2022
            "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/09OUT2022.xls",
            "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/16OUT2022.xls",
            "https://www.prefeitura.sp.gov.br/cidade/secretarias/upload/23OUT2022.xls")
+
+my_dates18 <- seq.Date(from=as.Date("2018-09-02"), to=as.Date("2022-11-11"), by="7 days")
+for(i in 1:length(files_2018)){ #i<-1
+ download.file(files_2018[i],
+               destfile = paste0(dir_sp, paste0("/", my_dates18[i], ".xls")))
+}
 
 my_dates <- seq.Date(from=as.Date("2022-09-04"), to=as.Date("2022-10-23"), by="7 days")
 for(i in 1:length(files)){ #i<-1
