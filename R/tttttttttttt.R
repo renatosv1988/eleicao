@@ -154,6 +154,7 @@ table(df_sections$idade_60M_decile)
 # aggregate variables at muni level
 df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T),
                            QT_APTOS_log = log(sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)),
+                           idade_60M = weighted.mean(x=idade_60M, w=QT_APTOS, na.rm=T),
                            biometria = weighted.mean(x=biometria, w=QT_APTOS, na.rm=T),
                            qt_biometria = sum(qt_biometria[which(NR_TURNO==2)], na.rm=T),
                            votos_jair_muni_total_p = sum(votos_jair[which(NR_TURNO==1)]) / sum(votos_total[which(NR_TURNO==1)]),
@@ -169,6 +170,7 @@ df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)
                            passe_livre_1 = max(passe_livre_1), 
                            passe_livre_2 = max(passe_livre_2)),
                    by= .(SG_UF, name_region, code_muni, variacao_comparecimento_2018_muni)]
+
 
 
 head(df_muni)
@@ -221,11 +223,26 @@ summary(df_muni$votos_jair_muni_validos_p)
 summary(df_muni$biometria)
 table(df_muni$name_region)
 
+# comp 2022 1 secao
+# comp 2022 2 secao
+# 
+# comp 2022 1 muni
+# comp 2022 2 muni
+# 
+# comp 2018 1 secao
+# comp 2018 2 secao
+# variavai 1-2 secao
+# 
+# comp 2018 1 muni
+# comp 2018 2 muni
+# variavai 1-2 muni
+
 # 666 definir ipw
 
-step1 <- glm(passe_livre_2 ~ gov_2t + QT_APTOS_log + pib_log + name_region + variacao_comparecimento_2018_muni+ votos_jair_muni_validos_p ,
+step1 <- glm(passe_livre_2 ~ gov_2t + QT_APTOS_log + pib_log + name_region + votos_jair_muni_validos_p ,
              family = binomial(link = 'logit'),
              data = df_muni)
+
 
 summary(step1)
 df_muni[, ipw := (passe_livre_2 / fitted(step1)) + ((1 - passe_livre_2) / ( 1- fitted(step1)))]
@@ -271,7 +288,8 @@ step2 <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2
                      cluster = 'code_muni',
                      weights = ~ipw,
                      data = df_sections)
-etable(step2)
+summary(step2)
+#
 
 
 # modelsummary::modelsummary(step2, stars = T)
@@ -308,7 +326,8 @@ dd1x <- fixest::feols(comparecimento_2018~turno2_dummy + passe_livre_2 + turno2_
                       weights = ~ipw,
                       data = df_sections)
 
-etable(dd1x)
+summary(dd1x)
+
 
 
 
