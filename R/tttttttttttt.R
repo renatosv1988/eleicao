@@ -21,7 +21,7 @@ df_secoes_2022 <- fread("../../data/base_DiD2022_secoes.csv")
 
 # percentage of voters living in cities with passe livre
 df_secoes_2022[NR_TURNO==2 & passe_livre==1, sum(QT_APTOS)] / df_secoes_2022[NR_TURNO==2, sum(QT_APTOS)]
-#> 0.4780362
+#> 0.4798155
 
 
 

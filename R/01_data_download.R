@@ -208,6 +208,11 @@ download.file(url = "https://raw.githubusercontent.com/betafcc/Municipios-Brasil
 
 
 
+
+#### urnas 2014 ---------------------------------------------------------------------
+# 6666666666666666
+# https://dadosabertos.tse.jus.br/dataset/resultados-2014/resource/55f1f786-cbf8-4cec-a003-f349d1dfb77f
+
 #### urnas 2022 ---------------------------------------------------------------------
 dir_urnas <- '../../data_raw/urnas_2022'
 dir.create(dir_urnas)

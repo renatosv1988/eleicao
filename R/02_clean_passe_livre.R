@@ -138,6 +138,9 @@ table(passe_livre$passe_livre_always, useNA = 'always')
 #>   1 <NA> 
 #>  53  380 
 
+setnames(passe_livre`Nível metropolitano`
+)
+
 
 
 # subset of columns
