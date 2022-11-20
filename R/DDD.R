@@ -39,11 +39,37 @@ BD$ano_2022 <- ifelse(BD$ANO_ELEICAO==2022,1,0)
 BD$turno_2 <- ifelse(BD$NR_TURNO==2,1,0)
 
 # triple-diffs -----------------------------------------------------------------
-# sem efeitos fixos de seção
-m1 <- feols(comparecimento~tratado*ano_2022*turno_2, data = BD, cluster = BD$code_muni)
-# add efeitos fixo de seção
-m2 <- feols(comparecimento~tratado*ano_2022*turno_2 | id_secao, data = BD, cluster = BD$code_muni)
-etable(m1,m2)
+# todos
+m1 <- feols(comparecimento~tratado*ano_2022*turno_2 | id_secao, data = BD, cluster = BD$code_muni)
+# exclui SP
+TD <- BD[BD$code_muni!=3550308,]
+m2 <- feols(comparecimento~tratado*ano_2022*turno_2 | id_secao, data = TD, cluster = TD$code_muni)
+# baixa renda
+TD <- BD[BD$educacao_1< median(BD$educacao_1, na.rm = T),]
+m3 <- feols(comparecimento~tratado*ano_2022*turno_2 | id_secao, data = TD, cluster = TD$code_muni)
+# jovens
+TD <- BD[BD$idade_60M< median(BD$idade_60M, na.rm = T),]
+m4 <- feols(comparecimento~tratado*ano_2022*turno_2 | id_secao, data = TD, cluster = TD$code_muni)
+# sudeste
+TD <- BD[substr(BD$code_muni,1,1)=="3",]
+m5 <- feols(comparecimento~tratado*ano_2022*turno_2 | id_secao, data = TD, cluster = TD$code_muni)
+# secoes menores
+TD <- BD[BD$QT_APTOS<=median(BD$QT_APTOS),]
+m6 <- feols(comparecimento~tratado*ano_2022*turno_2 | id_secao, data = TD, cluster = TD$code_muni)
+# secoes mais esquerdistas
+BD$pt_media <- ave(BD$votos_lula, BD$id_secao, FUN=mean)
+TD <- BD[BD$pt_media>=median(BD$pt_media, na.rm = T),]
+m7 <- feols(comparecimento~tratado*ano_2022*turno_2 | id_secao, data = TD, cluster = TD$code_muni)
+# secoes mais femininas
+TD <- BD[BD$mulheres>=median(BD$mulheres, na.rm = T),]
+m8 <- feols(comparecimento~tratado*ano_2022*turno_2 | id_secao, data = TD, cluster = TD$code_muni)
+
+
+etable(m1, m2, m3, m4, m5, m6, m7, m8,
+       headers = c("todas","exclui SP","menor educação","menos idosos",
+                   "somente SE","seções menores","vota mais PT","mais mulheres"))
+?etable()
+
 
 
 

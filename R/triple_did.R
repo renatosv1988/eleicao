@@ -210,38 +210,38 @@ head(df_muni)
 # 
 # # 666 definir ipw
 # 
-# step1 <- glm(passe_livre_2 ~ gov_2t + QT_APTOS_log + pib_log + name_region + votos_jair_muni_validos_p ,
-#              family = binomial(link = 'logit'),
-#              data = df_muni)
+ step1 <- glm(passe_livre_2 ~ gov_2t + QT_APTOS_log + pib_log + name_region + votos_jair_muni_validos_p ,
+              family = binomial(link = 'logit'),
+              data = df_muni)
 # 
 # 
-# summary(step1)
-# df_muni[, ipw := (passe_livre_2 / fitted(step1)) + ((1 - passe_livre_2) / ( 1- fitted(step1)))]
+ summary(step1)
+ df_muni[, ipw := (passe_livre_2 / fitted(step1)) + ((1 - passe_livre_2) / ( 1- fitted(step1)))]
 # 
-# hist(df_muni$ipw)
-# summary(df_muni$ipw)
+ hist(df_muni$ipw)
+ summary(df_muni$ipw)
 # 
 # 
-# # balancing AFTER ipw 
-# a <- df_muni[,   .(QT_APTOS          = weighted.mean(x=QT_APTOS, w = ipw),
-#                    QT_APTOS_log      = weighted.mean(x=QT_APTOS_log, w = ipw),
-#                    votos_jair_muni_total_p = weighted.mean(x=votos_jair_muni_total_p, w = ipw),
-#                    mean_dist         = weighted.mean(x=mean_dist, w = ipw, na.rm=T),
-#                    mean_dens_1000    = weighted.mean(x=mean_dens_1000, w = ipw),
-#                    educacao_1        = weighted.mean(x=educacao_1, w = ipw),
-#                    gov_2t            = weighted.mean(x=gov_2t, w = ipw),
-#                    pib_log           = weighted.mean(x=pib_log, w = ipw)),
-#              by=passe_livre_2]
+ # balancing AFTER ipw 
+ a <- df_muni[,   .(QT_APTOS          = weighted.mean(x=QT_APTOS, w = ipw),
+                    QT_APTOS_log      = weighted.mean(x=QT_APTOS_log, w = ipw),
+                    votos_jair_muni_total_p = weighted.mean(x=votos_jair_muni_total_p, w = ipw),
+                    mean_dist         = weighted.mean(x=mean_dist, w = ipw, na.rm=T),
+                    mean_dens_1000    = weighted.mean(x=mean_dens_1000, w = ipw),
+                    educacao_1        = weighted.mean(x=educacao_1, w = ipw),
+                    gov_2t            = weighted.mean(x=gov_2t, w = ipw),
+                    pib_log           = weighted.mean(x=pib_log, w = ipw)),
+              by=passe_livre_2]
 # 
 # 
 # 
 # # transpose
-# c <- data.table::transpose(a)
+ c <- data.table::transpose(a)
 # 
 # # get row and colnames in order
-# setnames(c, rownames(a))
-# c$variable <- colnames(a)
-# setcolorder(c, 'variable')
+ setnames(c, rownames(a))
+ c$variable <- colnames(a)
+ setcolorder(c, 'variable')
 # 
 # 
 # 
@@ -251,7 +251,7 @@ head(df_muni)
 # average effects with inverse probability weighting
 
 # # merge ipw info of muni to sections
-# setDT(df_sections)[df_muni, on='code_muni', ipw := i.ipw]
+ setDT(df_sections)[df_muni, on='code_muni', ipw := i.ipw]
 
 # reg
 step2 <- fixest::feols( comparecimento ~ dummy_turno*dummy_ano*passe , 
@@ -259,7 +259,15 @@ step2 <- fixest::feols( comparecimento ~ dummy_turno*dummy_ano*passe ,
                         cluster = 'code_muni',
                         data = df_sections)
 
-summary(step2)
+step2w <- fixest::feols( comparecimento ~ dummy_turno*dummy_ano*passe , 
+                        fixef = 'id_secao', 
+                        cluster = 'code_muni',
+                        weights = ~ipw,
+                        data = df_sections)
+
+etable(step2, step2w,
+       extralines=list("IPW"=c("No", "Yes")),
+       tex=T, file="figures/triple_diff_principal.tex")
 #
 
 
@@ -284,20 +292,64 @@ reg_region <- function(r){  # r = 'Norte'
  return(output)
 }
 
+
+
+output_did_region <- purrr::map(.x = unique(df_sections$name_region),
+                                .f = reg_region) |> rbindlist()
+
+reg_region <- function(r){  # r = 'Norte'
+ 
+ # select group
+ temp_df_section <- df_sections[ name_region == r, ]
+ 
+ # reg
+ step2 <- fixest::feols( comparecimento ~ dummy_turno*dummy_ano*passe , 
+                         fixef = 'id_secao', 
+                         cluster = 'code_muni',
+                         data = temp_df_section)
+ 
+ output <- data.frame(name_region = r,
+                      coef = step2$coeftable[6, 1],
+                      se = step2$coeftable[6, 2])
+ 
+ output$ipw="0"
+ 
+ 
+ step2w <- fixest::feols( comparecimento ~ dummy_turno*dummy_ano*passe , 
+                         fixef = 'id_secao', 
+                         cluster = 'code_muni',
+                         weights = ~ipw,
+                         data = temp_df_section)
+ 
+ outputw <- data.frame(name_region = r,
+                      coef = step2w$coeftable[6, 1],
+                      se = step2w$coeftable[6, 2])
+ 
+ outputw$ipw="1"
+ 
+ output <- rbind(output, outputw)
+ 
+ return(output)
+}
+
+
+
 output_did_region <- purrr::map(.x = unique(df_sections$name_region),
                                 .f = reg_region) |> rbindlist()
 
 
 ggplot() +
- geom_point(data = output_did_region, aes(x= name_region, y=coef)) +
+ geom_point(data = output_did_region, aes(x= name_region, y=coef, color=ipw),
+            position = position_dodge(width = 0.20)) +
  geom_pointrange(data=output_did_region,
                  # show.legend = FALSE,
-                 aes(x=name_region, y=coef,
+                 aes(x=name_region, y=coef, color=ipw,
                      ymin = coef - 1.96*se,
-                     ymax = coef + 1.96*se)) +
+                     ymax = coef + 1.96*se),
+                 position = position_dodge(width = 0.20)) +
  geom_hline(yintercept = 0, color='gray20') +
  theme_classic()
-
+ggsave("figures/triple_diff_regiao.png", w=10, h=6)
 
 
 
@@ -321,6 +373,21 @@ reg_edu <- function(e){  # e = 4
                       coef = step2$coeftable[6, 1],
                       se = step2$coeftable[6, 2])
  
+ output$ipw="0"
+ 
+ # reg
+ step2w <- fixest::feols( comparecimento ~ dummy_turno*dummy_ano*passe , 
+                         fixef = 'id_secao', 
+                         cluster = 'code_muni',
+                         weights = ~ipw,
+                         data = temp_df_section)
+ 
+ outputw <- data.frame(edu_cat = as.numeric(e),
+                      coef = step2w$coeftable[6, 1],
+                      se = step2w$coeftable[6, 2])
+ outputw$ipw="1"
+ 
+ output <- rbind(output, outputw)
  return(output)
 }
 
@@ -331,18 +398,18 @@ output3a <- purrr::map(.x = levels(df_sections$educacao_1_decile),
                        .f = reg_edu) |> rbindlist()
 
 
-ggplot(data = output3a, aes(x= factor(edu_cat), y=coef)) +
+ggplot(data = output3a, aes(x= factor(edu_cat), y=coef, color=ipw),
+       position = position_dodge(width = 0.20)) +
  geom_pointrange(data=output3a,
-                 color='#0d6556',
                  # show.legend = FALSE,
                  aes(x=factor(edu_cat), y=coef,
                      ymin = coef - 1.96*se,
-                     ymax = coef + 1.96*se)) +
- geom_point(color='#0d6556') +
+                     ymax = coef + 1.96*se, color=ipw),
+                 position = position_dodge(width = 0.20)) +
  geom_hline(yintercept = 0, color='gray20') +
  labs(x= 'Deciles of low\nsocioeconomic individuals') +
  theme_classic()
-
+ggsave("figures/triple_diff_educacao.png", w=10, h=6)
 
 
 
@@ -367,6 +434,23 @@ reg_dens <- function(i){  # i = 5
                       se = step2$coeftable[6, 2]
  )
  
+ 
+ output$ipw <- "0"
+ 
+ step2w <- fixest::feols( comparecimento ~ dummy_turno*dummy_ano*passe , 
+                         fixef = 'id_secao', 
+                         cluster = 'code_muni',
+                         weights = ~ipw,
+                         data = temp_df_section)
+ 
+ outputw <- data.frame(i = i,
+                      coef = step2w$coeftable[6, 1],
+                      se = step2w$coeftable[6, 2]
+ )
+ 
+ outputw$ipw <- "1"
+ 
+ output <- rbind(output, outputw)
  return(output)
 }
 
@@ -376,13 +460,15 @@ output3b <- purrr::map(.x = levels(df_sections$num_1000_decile),
                        .f = reg_dens) |> rbindlist()
 
 
-ggplot(data = output3b, aes(x= as.numeric(i), y=coef)) +
- geom_line() +
- geom_ribbon(aes(ymax=coef + 1.96*se, ymin=coef - 1.96*se), alpha=.2) +
+ggplot() +
+ #geom_line() +
+ geom_line(aes(x=as.numeric(i), y = coef, color=ipw), data=output3b) +
+ geom_ribbon(aes(x=as.numeric(i), y = coef, ymax=coef + 1.96*se, ymin=coef - 1.96*se,
+                 color=ipw, group=ipw, fill=ipw), alpha=.1, data = output3b, linetype=2) +
  geom_hline(yintercept = 0) +
  labs(x='Deciles of density of electoral sections') +
  theme_classic()
-
+ggsave("figures/triple_diff_densidade.png", w=10, h=6)
 
 
 
@@ -411,6 +497,20 @@ reg_age <- function(e){  # e = '(0.312,0.381]'
                       coef = step2$coeftable[6, 1],
                       se = step2$coeftable[6, 2])
  
+ output$ipw <- "0"
+ # reg
+ step2w <- fixest::feols( comparecimento ~ dummy_turno*dummy_ano*passe , 
+                         fixef = 'id_secao', 
+                         cluster = 'code_muni',
+                         weights = ~ipw,
+                         data = temp_df_section)
+ 
+ outputw <- data.frame(age_cat = e,
+                      coef = step2w$coeftable[6, 1],
+                      se = step2w$coeftable[6, 2])
+ outputw$ipw <- "1"
+ 
+ output <- rbind(output, outputw)
  return(output)
 }
 
@@ -421,18 +521,18 @@ output5 <- purrr::map(.x = levels(df_sections$idade_60M_decile),
                       .f = reg_age) |> rbindlist()
 
 
-ggplot(data = output5, aes(x= factor(age_cat), y=coef)) +
+ggplot(data = output5, aes(x= factor(age_cat), y=coef, color=ipw)) +
  geom_pointrange(data=output5,
-                 color='#0d6556',
                  # show.legend = FALSE,
                  aes(x=factor(age_cat), y=coef,
                      ymin = coef - 1.96*se,
-                     ymax = coef + 1.96*se)) +
- geom_point(color='#0d6556') +
+                     ymax = coef + 1.96*se, color=ipw),
+                 position = position_dodge(width = 0.20)) +
+ #geom_point(color='#0d6556') +
  geom_hline(yintercept = 0, color='gray20') +
  labs(x= 'Deciles of low\nsocioeconomic individuals') +
  theme_classic()
-
+ggsave("figures/triple_diff_idade60.png", w=10, h=6)
 
 
 
@@ -447,7 +547,7 @@ ggplot(data = output5, aes(x= factor(age_cat), y=coef)) +
 # test 1o vs 1o comparecimento -------------------------------------
 
 # keep only 1st round
-temp_df1 <- subset(df2, NR_TURNO == 1)
+temp_df1 <- subset(df_sections, NR_TURNO == 1)
 
 # checks
 table(temp_df1$dummy_ano)
@@ -455,10 +555,10 @@ table(temp_df1$NR_TURNO)
 
 table(temp_df1$passe_livre_1, temp_df1$dummy_ano)
 
-output_1 <- fixest::feols( comparecimento ~ dummy_ano*passe_livre_1 , 
+output_1 <- fixest::feols( comparecimento ~ dummy_ano*passe , 
                            fixef = 'id_secao', 
                            cluster = 'code_muni',
-                           weights = ~ipw,
+                           #weights = ~ipw,
                            data = temp_df1)
 summary(output_1)
 
@@ -467,7 +567,7 @@ summary(output_1)
 # test 2o vs 2o comparecimento -------------------------------------
 
 # keep only 1st round
-temp_df2 <- subset(df2, NR_TURNO == 2)
+temp_df2 <- subset(df_sections, NR_TURNO == 2)
 
 # checks
 table(temp_df2$dummy_ano)
@@ -475,10 +575,10 @@ table(temp_df2$NR_TURNO)
 
 table(temp_df2$passe_livre, temp_df2$dummy_ano)
 
-output_2 <- fixest::feols(comparecimento ~ dummy_ano*passe_livre , 
+output_2 <- fixest::feols(comparecimento ~ dummy_ano*passe , 
                           fixef = 'id_secao', 
                           cluster = 'code_muni',
-                          weights = ~ipw,
+                          #weights = ~ipw,
                           data = temp_df2)
 summary(output_2)
 
@@ -492,7 +592,7 @@ etable(list(output_1, output_2))
 # test 1o vs 1o Lula -------------------------------------
 
 # keep only 1st round
-temp_df1 <- subset(df2, NR_TURNO == 1)
+temp_df1 <- subset(df_sections, NR_TURNO == 1)
 
 # checks
 table(temp_df1$dummy_ano)
@@ -500,10 +600,10 @@ table(temp_df1$NR_TURNO)
 
 table(temp_df1$passe_livre_1, temp_df1$dummy_ano)
 
-output_3 <- fixest::feols( votos_lula_p ~ dummy_ano*passe_livre_1 , 
+output_3 <- fixest::feols( votos_lula_p ~ dummy_ano*passe , 
                            fixef = 'id_secao', 
                            cluster = 'code_muni',
-                           weights = ~ipw,
+                           #weights = ~ipw,
                            data = temp_df1)
 summary(output_3)
 
@@ -512,7 +612,7 @@ summary(output_3)
 # test 2o vs 2o Lula -------------------------------------
 
 # keep only 1st round
-temp_df2 <- subset(df2, NR_TURNO == 2)
+temp_df2 <- subset(df_sections, NR_TURNO == 2)
 
 # checks
 table(temp_df2$dummy_ano)
