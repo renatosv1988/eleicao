@@ -38,7 +38,7 @@ secao_br[, comparecimento_2018 := QT_COMPARECIMENTO / QT_APTOS]
 secao_br[, abstencao_2018 := QT_ABSTENCOES / QT_APTOS]
 
 # incluir 2º turno governador
-gov <- subset(secao, DS_CARGO == 'GOVERNADOR' & SG_UF != 'ZZ' & NR_TURNO==2)
+gov <- subset(secao, DS_CARGO == 'Governador' & SG_UF != 'ZZ' & NR_TURNO==2)
 gov$gov_2t <- 1
 gov <- gov[, .(gov_2t = mean(gov_2t)), by = SG_UF]
 secao_br <- merge(secao_br, gov, by ="SG_UF", all.x = T)
