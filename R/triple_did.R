@@ -17,6 +17,9 @@ df2[, votos_lula_p := sum(votos_lula) / sum(votos_validos), by = .(ANO_ELEICAO, 
 # excluir seções de cidades sem sistema de ônibus
 df2 <- subset(df2, dummy_pt==1)
 
+# excluir cidades que SEMPRE tiveram passe livre
+df2 <- subset(df2, is.na(passe_livre_always))
+
 
 # identify treated in the 1st round
 df2[, passe_livre_1 := max(NR_TURNO==1 & passe_livre==1), by = id_secao]

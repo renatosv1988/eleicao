@@ -34,16 +34,16 @@ df_muni <- eleicao[, .(QT_APTOS = sum(QT_APTOS),
                        mean_dist = weighted.mean(x=dist_sede, w=QT_APTOS, na.rm=T),
                        mean_dens_1000 = weighted.mean(x=num_1000, w=QT_APTOS, na.rm=T),
                        educacao_1 = weighted.mean(x=educacao_1, w=QT_APTOS, na.rm=T),
-                       passe_livre = max(passe_livre)
+                       passe_livre = max(passe_livre),
+                       passe_livre_always = max(passe_livre_always)
                        ),
                    by = .(SG_UF, name_region, ANO_ELEICAO, NR_TURNO, code_muni, CD_MUNICIPIO, PIB_PC)]
 
 head(df_muni)
 
 
-                
-
-            
+table(df_muni$passe_livre_always)
+#> 60        
             
 
 # recode variables ------------------------------------------------------------

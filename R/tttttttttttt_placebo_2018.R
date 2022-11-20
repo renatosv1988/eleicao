@@ -32,6 +32,9 @@ df_secoes_2022 <- subset(df_secoes_2022, dummy_pt==1)
 df_secoes_2022[, table(NR_TURNO, dummy_pt)]
 df_secoes_2022[, table(NR_TURNO, passe_livre)]
 
+# excluir cidades que SEMPRE tiveram passe livre
+df_secoes_2022 <- subset(df_secoes_2022, is.na(passe_livre_always))
+
 #>            passe_livre
 #> NR_TURNO      0      1
 #>        1 260427  73829

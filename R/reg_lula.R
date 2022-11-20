@@ -25,6 +25,9 @@ df_secoes_2022 <- subset(df_secoes_2022, dummy_pt==1)
 df_secoes_2022[, table(NR_TURNO, dummy_pt)]
 df_secoes_2022[, table(NR_TURNO, passe_livre)]
 
+# excluir cidades que SEMPRE tiveram passe livre
+df_secoes_2022 <- subset(df_secoes_2022, is.na(passe_livre_always))
+
 
 # identify treated in the 1st round
 df_secoes_2022[, passe_livre_1 := max(NR_TURNO==1 & passe_livre==1), by = id_secao]
