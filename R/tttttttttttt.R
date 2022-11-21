@@ -239,6 +239,7 @@ df_muni[, ipw := (passe_livre_2 / fitted(step1)) + ((1 - passe_livre_2) / ( 1- f
 hist(df_muni$ipw)
 summary(df_muni$ipw)
 
+plot(log(df_muni$ipw), df_muni$QT_APTOS_log)
 
 
              # # balancing AFTER ipw 

@@ -242,5 +242,4 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
 eleicao_2018 <- eleicao_2018[, ..my_var]
 
 fwrite(eleicao_2018, "../../data/base_DiD2018_secoes.csv")
-
-
+saveRDS(eleicao_2018, "../../data/base_DiD2018_secoes.rds",compress = T)
