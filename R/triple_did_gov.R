@@ -16,7 +16,8 @@ options(scipen = 999)
 
 # read data ----------------------------------------------------------------------
 
-df <- fread("../../data/base_DiD2022_2018_secoes.csv")
+#df <- fread("../../data/base_DiD2022_2018_secoes.csv")
+df <- readRDS("../../data/base_DiD2022_2018_secoes.rds")
 
 
 
@@ -177,7 +178,7 @@ df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)
                            passe_livre = max(passe_livre), 
                            passe_livre_1 = max(passe_livre_1), 
                            passe_livre_2 = max(passe_livre_2)),
-                       by= .(SG_UF, name_region, code_muni, ANO_ELEICAO)]
+                       by= .(SG_UF,  code_muni, ANO_ELEICAO)]
 
 
 
@@ -260,24 +261,24 @@ head(df_muni)
 step2 <- fixest::feols( comparecimento ~ dummy_turno*passe, 
                         fixef = 'id_secao', 
                         cluster = 'code_muni',
-                        data = df_sections[df_sections$ANO_ELEICAO==2022,])
+                        data = df_sections[df_sections$ANO_ELEICAO==2018,])
 
 step2w <- fixest::feols( comparecimento ~ dummy_turno*passe, 
                         fixef = 'id_secao', 
                         cluster = 'code_muni',
                         weights = ~ipw,
-                        data = df_sections[df_sections$ANO_ELEICAO==2022,])
+                        data = df_sections[df_sections$ANO_ELEICAO==2018,])
 
 step2g <- fixest::feols( comparecimento ~ dummy_turno*passe + gov_2t, 
                         fixef = 'id_secao', 
                         cluster = 'code_muni',
-                        data = df_sections[df_sections$ANO_ELEICAO==2022,])
+                        data = df_sections[df_sections$ANO_ELEICAO==2018,])
 
 step2wg <- fixest::feols( comparecimento ~ dummy_turno*passe + gov_2t, 
                          fixef = 'id_secao', 
                          cluster = 'code_muni',
                          weights = ~ipw,
-                         data = df_sections[df_sections$ANO_ELEICAO==2022,])
+                         data = df_sections[df_sections$ANO_ELEICAO==2018,])
 
 
 
