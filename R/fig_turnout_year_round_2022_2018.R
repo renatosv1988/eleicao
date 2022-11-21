@@ -37,6 +37,13 @@ df2 <- subset(df2, is.na(passe_livre_always))
 
 
 
+# determine treated and untreated
+summary(df2$passe_livre)
+summary(google1$passe_2)
+google1[, passe_1 := fifelse(is.na(passe_1), 0, passe_1)]
+google1[, passe_2 := fifelse(is.na(passe_2), 0, passe_2)]
+
+
 # comparecimento ---------------------------------------------------------------
 
 a <- df2[, .(comparecimento = weighted.mean(comparecimento, w = QT_APTOS),
@@ -54,20 +61,28 @@ f_comp <- ggplot() +
            geom_pointrange(data=a,
                            position = position_dodge2(width = .2),
                            show.legend = FALSE,
-                           aes(x=t2, y=comparecimento, color=factor(passe_livre),
+                           aes(x=t, y=comparecimento, color=factor(passe_livre),
                                ymin = p25,
                                ymax = p75)) +
-           geom_line(data=a,
+           geom_line(data=subset(a, ANO_ELEICAO==2018),
                      position = position_dodge2(width = .2),
-                     aes(x=t2, y=comparecimento,
+                     aes(x=t, y=comparecimento,
                                  color=factor(passe_livre),
                                  group=passe_livre)) +
-           labs(y='% voter turnout', color = 'treament') +
-           ylim(.7, .88) +
-           theme_classic()
+          geom_line(data=subset(a, ANO_ELEICAO==2022),
+                    position = position_dodge2(width = .2),
+                    aes(x=t, y=comparecimento,
+                        color=factor(passe_livre),
+                        group=passe_livre)) +
+          labs(y='% voter turnout', color = 'treament') +
+                    ylim(.7, .88) +
+                    theme_classic()
 
 
 
+ggsave('./figures/turnout_trend_2022_2018.png', 
+       height = 8, width = 14, 
+       units='cm')
 
 
 
