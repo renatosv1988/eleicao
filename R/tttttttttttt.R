@@ -15,6 +15,8 @@ options(scipen = 999)
 
 df_secoes_2022 <- fread("../../data/base_DiD2022_secoes.csv")
 
+     # # 66666 
+     # df_secoes_2022 <- df_secoes_2022[SG_UF != "SP"]
 
 # percentage of voters living in cities with passe livre
 df_secoes_2022[NR_TURNO==2 & passe_livre==1, sum(QT_APTOS)] / df_secoes_2022[NR_TURNO==2, sum(QT_APTOS)]
@@ -76,6 +78,30 @@ df_sections[, table(NR_TURNO, passe_livre_2)]
 
 # share of PT votes
 df_sections[, votos_lula_p := sum(votos_lula) / sum(votos_validos), by = .(ANO_ELEICAO, NR_TURNO, id_secao)]
+
+      # # 66666 comparecimento baeyseano
+      # df_sections <- df_sections[order(ANO_ELEICAO, id_secao, NR_TURNO)]
+      # df_sections[, comparecimento_2022b := (comparecimento_2022 )/shift(comparecimento_2022), by =.(ANO_ELEICAO, id_secao)]
+      # df_sections[NR_TURNO==1, comparecimento_2022b := 1]
+      # 
+      # summary(df_sections$comparecimento_2022b)
+      # 
+      # df_sections[1:4, .(NR_TURNO, comparecimento_2022, comparecimento_2022b)] |> View()
+      # 
+      # # 2018
+      # eleicao_2018 <- fread('../../data/base_DiD2018_secoes.csv')
+      # eleicao_2018 <- eleicao_2018[order(ANO_ELEICAO, id_secao, NR_TURNO)]
+      # eleicao_2018[, comparecimento_2018b := (comparecimento )/shift(comparecimento), by =.(ANO_ELEICAO, id_secao)]
+      # eleicao_2018[NR_TURNO==1, comparecimento_2018b := 1]
+      # 
+      # summary(eleicao_2018$comparecimento_2018b)
+      # eleicao_2018[1:4, .(NR_TURNO, comparecimento, comparecimento_2018b)] |> View()
+      # 
+      # df_sections <- left_join(df_sections, eleicao_2018[, .(NR_TURNO, id_secao, comparecimento_2018b)],
+      #                      by=c('NR_TURNO','id_secao'), all.x = T)
+      # 
+      # summary(df_sections$comparecimento_2018)
+      # summary(df_sections$comparecimento_2018b)
 
 # discretize edu
 my_breaks <- seq(0, 0.7, by=.1)
@@ -222,13 +248,26 @@ df_sections[, table(passe_livre_2, turno2_dummy)]
 
 
 
+# 6666 add politica party
+df_muni <- left_join(df_muni, df_partido,
+                  by=c('code_muni'='id_municipio'), all.x = T)
+
+# 6666
+df_muni[is.na(dummy_partidobase_2020), dummy_partidobase_2020 := 1]
+df_muni[is.na(dummy_partidobase_2016), dummy_partidobase_2016 := 1]
+table(df_muni$dummy_partidobase_2016, useNA = 'always')
+
+
+
+
+
 # ipw balancing ----------------------------------------------------------------------
 summary(df_muni$variacao_comparecimento_2018_muni)
 summary(df_muni$votos_jair_muni_validos_p)
 summary(df_muni$biometria)
-table(df_muni$name_region)
+table(df_muni$variacao_comparecimento_2018_muni)
 
-step1 <- glm(passe_livre_2 ~ gov_2t + QT_APTOS_log + pib_log + name_region + votos_lula_muni_validos_p ,
+step1 <- glm(passe_livre_2 ~ variacao_comparecimento_2018_muni + gov_2t + QT_APTOS_log + pib_log  + votos_jair_muni_validos_p ,
              family = binomial(link = 'logit'),
              data = df_muni)
 
@@ -272,6 +311,8 @@ plot(log(df_muni$ipw), df_muni$QT_APTOS_log)
 # merge ipw info of muni to sections
 setDT(df_sections)[df_muni, on='code_muni', ipw := i.ipw]
 
+
+
 # reg
 step2_2022 <- fixest::feols(comparecimento_2022~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                      fixef = 'id_secao', 
@@ -286,6 +327,8 @@ step2_2018 <- fixest::feols(comparecimento_2018~turno2_dummy + passe_livre_2 + t
                        data = df_sections)
 
 
+summary(step2_2022)
+summary(step2_2018)
 
 model_list <- list(step2_2022, step2_2018)
 names(model_list) <- c('Turnout 2022', 'Turnout 2018')
@@ -342,7 +385,7 @@ reg_region <- function(r){  # r = 'Norte'
  temp_df_section <- df_sections[ name_region == r, ]
  
  # calculate ipw
- temp_step1 <- glm(passe_livre_2 ~ gov_2t + QT_APTOS_log + pib_log + votos_lula_muni_validos_p, 
+ temp_step1 <- glm(passe_livre_2 ~ variacao_comparecimento_2018_muni+gov_2t + QT_APTOS_log + pib_log + votos_lula_muni_validos_p, 
               family = binomial(link = 'logit'),
               data = temp_df_muni)
  
