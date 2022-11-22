@@ -16,7 +16,7 @@ eleicao_2018 <- fread('../../data/base_DiD2018_secoes.csv')
 
 
 # drop columns
-eleicao_2022[, c('NM_LOCAL_VOTACAO', 'NM_MUNICIPIO', 'comparecimento_2018', 'comparecimento_2018_muni', 'variacao_comparecimento_2018_muni') := NULL]
+eleicao_2022[, c('NM_LOCAL_VOTACAO', 'NM_MUNICIPIO', 'votos_lula_2018', 'comparecimento_2018', 'comparecimento_2018_muni', 'variacao_comparecimento_2018_muni') := NULL]
 
 # rename columns
 setnames(eleicao_2022,
@@ -24,9 +24,9 @@ setnames(eleicao_2022,
          new = c('comparecimento', 'abstencao'))
 
 
-setnames(eleicao_2018,
-         old = c('comparecimento_2018','abstencao_2018'),
-         new = c('comparecimento', 'abstencao'))
+# setnames(eleicao_2018,
+#          old = c('comparecimento_2018','abstencao_2018'),
+#          new = c('comparecimento', 'abstencao'))
 
 
 # juntar 2018 e 2022
@@ -38,3 +38,4 @@ eleicao <- rbind(eleicao_2018, eleicao_2022, fill=TRUE)
 
 # salvar arquivo final----------------------------------------------------------
 fwrite(eleicao, "../../data/base_DiD2022_2018_secoes.csv")
+saveRDS(eleicao, "../../data/base_DiD2022_2018_secoes.rds",compress = T)

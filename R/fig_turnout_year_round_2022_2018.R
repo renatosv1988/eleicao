@@ -47,6 +47,7 @@ google1[, passe_2 := fifelse(is.na(passe_2), 0, passe_2)]
 # comparecimento ---------------------------------------------------------------
 
 a <- df2[, .(comparecimento = weighted.mean(comparecimento, w = QT_APTOS),
+             sd = sd(comparecimento),
              p25 = quantile(comparecimento,0.25, na.rm=T),
              p75 = quantile(comparecimento,0.75, na.rm=T)
              ),

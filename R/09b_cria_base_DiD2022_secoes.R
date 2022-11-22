@@ -5,6 +5,7 @@ library(scales)
 library(fixest)
 library(vroom)
 library(purrr)
+library(dplyr)
 
 `%nin%` <- negate(`%in%`)
 `%unlike%` <- negate(`%like%`)
@@ -155,7 +156,7 @@ regions$geom <- NULL
 
 # add region to section data
 eleicao_2022[, code_region := substring(code_muni, 1, 1) |> as.numeric() ]
-eleicao_2022 <- left_join(eleicao_2022, regions, by=c('code_region'))
+eleicao_2022 <- dplyr::left_join(eleicao_2022, regions, by=c('code_region'))
 table(eleicao_2022$name_region)
 
 
@@ -200,12 +201,18 @@ summary(eleicao_2022$comparecimento_2022)
 
 
 # adicionar variacao de comparecimento em 2018 por secao  -------------------
-summary(SE18$comparecimento_2018)
+summary(SE18$comparecimento)
+SE18[, comparecimento_2018 := comparecimento]
+
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #>  0.0000  0.7500  0.8009  0.7940  0.8449  1.0000
 
+# share of PT votes
+SE18[, votos_lula_2018 := sum(votos_lula) / sum(votos_validos), by = .(ANO_ELEICAO, NR_TURNO, id_secao)]
+summary(SE18$votos_lula_2018)
+
 eleicao_2022 <- merge(eleicao_2022,
-                      SE18[, .(id_secao, NR_TURNO, comparecimento_2018, variacao_comparecimento_2018)], 
+                      SE18[, .(id_secao, NR_TURNO, comparecimento_2018, variacao_comparecimento_2018, votos_lula_2018)], 
                       by=c('id_secao', 'NR_TURNO'), all.x = T)
 
 summary(eleicao_2022$comparecimento_2018)
@@ -214,7 +221,6 @@ summary(eleicao_2022$comparecimento_2018)
 
 eleicao_2022[ is.na(comparecimento_2018) , .N] / nrow(eleicao_2022)
 #> 0.07160347
-
 
 
 
@@ -269,7 +275,7 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NM_LOCAL_VOTACAO", "NR_SECAO
             "biometria", "qt_biometria",
             "comparecimento_2022","abstencao_2022",
             
-            "comparecimento_2018", "comparecimento_2018_muni",
+            "comparecimento_2018", "comparecimento_2018_muni", 'votos_lula_2018',
             "variacao_comparecimento_2018", "variacao_comparecimento_2018_muni",
              
             

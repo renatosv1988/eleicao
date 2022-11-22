@@ -1,6 +1,5 @@
 library(geobr)
 library(data.table)
-library(ggplot2)
 
 
 # read data ----------------------------------------------------------------------
