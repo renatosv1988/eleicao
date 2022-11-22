@@ -157,9 +157,38 @@ download.file("https://ftp.ibge.gov.br/Perfil_Municipios/2020/Base_de_Dados/Base
 munic <- openxlsx::read.xlsx(xlsxFile = '../../data_raw/munic/Base_MUNIC_2020.xlsx',
                          sheet = 'Transporte')
 
+setDT(munic)
+
+
+table(munic$Mtra19, useNA = 'always')
+
+# error types 1 and 2
+a  <- munic[Mtra19 %like% 'Recusa|Não', .(UF, CodMun, Mun, Faixa_pop, Mtra19)]
+a  <- munic[Mtra19 %like% 'Sim', .(UF, CodMun, Mun, Faixa_pop, Mtra19)]
 
 # Fix Municipio of Ananindeua did not answer the survey, but they do have public transport
-setDT(munic)[, Mtra19 := fifelse(CodMun == 1500800, 'Sim', Mtra19)]
+cities_with_pt <- c(1500800, # Ananindeua
+                    2706703, # Penedo
+                    4211900, # Palhoca
+                    1709500, # Gurupi
+                    2907509, # Catu
+                    3304524, # Rio das Ostras
+                    3138203, # Lavras
+                    1503606, # Itaituba
+                    1303403, # Parintins
+                    2306405, # Itapipoca
+                    2600054, # Abreu e Lima
+                    2603454, # Camaragibe
+                    2900702, # Alagoinhas
+                    3302858, # Mesquita
+                    3545803, # Santa Bárbara dOeste
+                    4107652, # Fazenda Rio Grande
+                    4119152 # Pinhais
+                    )
+
+munic[, Mtra19 := fifelse(CodMun %in% cities_with_pt, 'Sim', Mtra19)]
+
+
 
 # create dummy
 munic[, dummy_pt := fifelse(Mtra19 == 'Sim', 1, 0)]
