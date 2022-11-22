@@ -275,7 +275,7 @@ summary(df_muni$biometria)
 table(df_muni$variacao_comparecimento_2018_muni)
 
 l <- lm(passe_livre_2~ gov_2t + name_region + variacao_comparecimento_2018_muni + 
-              QT_APTOS_log + pib_log  + votos_jair_muni_validos_p ,
+              QT_APTOS_log + pib_log  + biometria + votos_jair_muni_validos_p ,
              data = df_muni)
 
 summary(l)
