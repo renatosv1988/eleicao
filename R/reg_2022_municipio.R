@@ -33,20 +33,22 @@ options(scipen = 999)
 
 # read data ----------------------------------------------------------------------
 
-df <- fread("../../data/base_DiD2022_2018_muni.csv")
+df_raw <- fread("../../data/base_DiD2022_2018_muni.csv")
 
 # 666 só 2022
-df <- df[ANO_ELEICAO==2022]
+df_2022 <- df_raw[ANO_ELEICAO==2022]
+df_2018 <- df_raw[ANO_ELEICAO==2018]
+
 
 # Select observations ----------------------------------------------------------------------
 
 # keep only cities with public transport
-df[, passe_livre_any := max(passe_livre), by = code_muni]
-df <- subset(df, dummy_pt==1 | passe_livre_any ==1)
+df_2022[, passe_livre_any := max(passe_livre), by = code_muni]
+df_2022 <- subset(df_2022, dummy_pt==1 | passe_livre_any ==1)
 
 
 # excluir cidades que SEMPRE tiveram passe livre
-df <- subset(df, is.na(passe_livre_always))
+df <- subset(df_2022, is.na(passe_livre_always))
 
 
 # identify treated in the 1st round
@@ -84,6 +86,18 @@ df[, votos_jair_p := sum(votos_jair) / sum(votos_validos), by = .(ANO_ELEICAO, N
 
 
 
+# bring turnout of 2018
+df_2018[, comparecimento_2018 := comparecimento]
+summary(df_2018$comparecimento)
+summary(df_2018$comparecimento_2018)
+
+df2 <- left_join(df,
+                 df_2018[,.(code_muni, NR_TURNO, comparecimento_2018)], 
+                 by=c('NR_TURNO', 'code_muni'))
+
+
+head(df2)
+summary(df2$comparecimento_2018)
 
 # Descriptive analysis ----------------------------------------------------------------------
 
@@ -91,18 +105,17 @@ df[, votos_jair_p := sum(votos_jair) / sum(votos_validos), by = .(ANO_ELEICAO, N
 
 
 # ipw balancing ----------------------------------------------------------------------
-summary(df_muni$variacao_comparecimento_2018_muni)
-summary(df_muni$votos_jair_muni_validos_p)
-summary(df_muni$biometria)
-table(df_muni$variacao_comparecimento_2018_muni)
+summary(df2$variacao_comparecimento_2018_muni)
+summary(df2$biometria)
+table(df2$variacao_comparecimento_2018_muni)
 
-l <- lm(passe_livre_2~ gov_2t + name_region + 
+l <- lm(passe_livre_2~ gov_2t + name_region +  biometria+
          QT_APTOS_log + pib_log  + votos_lula_p ,
-        data = df)
+        data = df2)
 
 summary(l)
 
-step1 <- glm(passe_livre_2~ gov_2t + name_region  + 
+step1 <- glm(passe_livre_2~ gov_2t + name_region +  biometria+
               QT_APTOS_log + pib_log  + votos_lula_p ,
              
              family = binomial(link = 'logit'),
@@ -110,126 +123,23 @@ step1 <- glm(passe_livre_2~ gov_2t + name_region  +
 
 
 summary(step1)
-df[, ipw := (passe_livre_2 / fitted(step1)) + ((1 - passe_livre_2) / ( 1- fitted(step1)))]
-
-
-# #### 1st round  ----------------------------------------------------------------------
-# 
-# df_2018_r1 <- subset(df, ANO_ELEICAO==2018 & NR_TURNO==1)
-# table(df_2018_r1$NR_TURNO, df_2018_r1$ANO_ELEICAO)
-# 
-# 
-# # ipw balancing
-# step1_t1 <- glm(passe_livre_t1 ~ QT_APTOS_log + pib_log + code_state + gov_2t,#+ votos_jair_muni_p + gov_2t , # + mean_dens_1000, 
-#              family = binomial(link = 'logit'),
-#              data = df_2018_r1)
-# 
-# summary(step1_t1)
-# df_2018_r1[, ipw := (passe_livre_t1 / fitted(step1_t1)) + ((1 - passe_livre_t1) / ( 1- fitted(step1_t1)))]
-# 
-# hist(df_2018_r1$ipw)
-# summary(df_2018_r1$ipw)
-# 
-# 
-# # # balancing AFTER ipw 
-# # a <- df_muni[,   .(QT_APTOS          = weighted.mean(x=QT_APTOS, w = ipw),
-# #                    QT_APTOS_log      = weighted.mean(x=QT_APTOS_log, w = ipw),
-# #                    votos_jair_muni_p = weighted.mean(x=votos_jair_muni_p, w = ipw),
-# #                    mean_dist         = weighted.mean(x=mean_dist, w = ipw, na.rm=T),
-# #                    mean_dens_1000    = weighted.mean(x=mean_dens_1000, w = ipw),
-# #                    educacao_1        = weighted.mean(x=educacao_1, w = ipw),
-# #                    gov_2t            = weighted.mean(x=gov_2t, w = ipw),
-# #                    pib_log           = weighted.mean(x=pib_log, w = ipw)),
-# #              by=passe_livre_2]
-# # 
-# # 
-# # 
-# # # transpose
-# # c <- data.table::transpose(a)
-# # 
-# # # get row and colnames in order
-# # setnames(c, rownames(a))
-# # c$variable <- colnames(a)
-# # setcolorder(c, 'variable')
-# # 
-# 
-# 
-# # Model 1. Average effects
-# # average effects with inverse probability weighting
-# 
-# df_round1 <- df[NR_TURNO==1,]
-# df_round1 <- left_join(df_round1, df_2018_r1[, .(code_muni, ipw)], by = 'code_muni')
-# 
-# # reg
-# step2_r1 <- fixest::feols(comparecimento~ANO_ELEICAO + passe_livre_t1 + ANO_ELEICAO:passe_livre_t1, 
-#                        fixef = 'code_muni', 
-#                        cluster = 'code_muni',
-#                        weights = ~ipw,
-#                        data = df_round1)
-# summary(step2_r1)
-# 
-# 
-# df_round1[, mean(comparecimento), by = .(passe_livre_t1, ANO_ELEICAO)]
-# 
-# 
-# 
-# 
-# modelsummary::modelsummary(step2_r1, stars = T)
-# 
-# 
-# temp_df <- df_round1[, .(mean_value=mean(comparecimento, na.rm=T),
-#                            p25 = quantile(comparecimento,0.25, na.rm=T),
-#                            p75 = quantile(comparecimento,0.75, na.rm=T)), by=.(ANO_ELEICAO, passe_livre_t1)]
-# 
-# ggplot() +
-#  geom_line(data=temp_df, aes(x=ANO_ELEICAO, y=mean_value, color=factor(passe_livre_t1)),
-#            position = position_dodge2(width = 1)) +
-#  geom_pointrange(data=temp_df,
-#                  position = position_dodge2(width = 1),
-#                  show.legend = FALSE,
-#                  aes(x=ANO_ELEICAO, y=mean_value, color=factor(passe_livre_t1),
-#                      ymin = p25,
-#                      ymax = p75)) +
-#  labs(y='Voter turnout', x = '1st round', color='Free transit') +
-#  scale_x_continuous( breaks =  c(2018, 2022)) +
-#  scale_y_continuous(labels = scales::percent) +
-#   scale_color_npg() +
-#  #scale_color_uchicago() +
-#  # scale_color_jama() +
-#  theme_classic()
-# 
-# 
-
-
-# 2nd round  ----------------------------------------------------------------------
-
-df_2018_r2 <- subset(df, ANO_ELEICAO==2018 & NR_TURNO==2)
-table(df_2018_r2$NR_TURNO, df_2018_r2$ANO_ELEICAO)
-
-
-# ipw balancing
-step1_t2 <- glm(passe_livre_t2 ~ QT_APTOS_log + pib_log + code_state + gov_2t,#+ votos_jair_muni_p + gov_2t , # + mean_dens_1000, 
-                family = binomial(link = 'logit'),
-                data = df_2018_r2)
-
-
-summary(df_2018_r2$ipw)
+setDT(df2)[, ipw := (passe_livre_2 / fitted(step1)) + ((1 - passe_livre_2) / ( 1- fitted(step1)))]
+summary(df2$ipw)
 
 
 
 
-# Model 1. Average effects
+
+
+# Model 1. Average effects   ----------------------------------------------------------------------
 # average effects with inverse probability weighting
 
-df_round2 <- df[NR_TURNO==2,]
-df_round2 <- left_join(df_round2, df_2018_r2[, .(code_muni, ipw)], by = 'code_muni')
-
 # reg
-step2_r2 <- fixest::feols(comparecimento~ANO_ELEICAO + passe_livre_t2 + ANO_ELEICAO:passe_livre_t2, 
+step2_r2 <- fixest::feols(comparecimento_2018~turno2_dummy + passe_livre_2 + turno2_dummy:passe_livre_2, 
                           fixef = 'code_muni', 
                           cluster = 'code_muni',
                           weights = ~ipw,
-                          data = df_round2)
+                          data = df2)
 summary(step2_r2)
 
 

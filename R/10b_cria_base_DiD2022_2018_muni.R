@@ -11,6 +11,7 @@ table(eleicao$ANO_ELEICAO)
 #> 906608 940932 
 
 
+summary(eleicao$comparecimento)
 
 
 
@@ -38,7 +39,7 @@ df_muni <- eleicao[, .(QT_APTOS = sum(QT_APTOS),
                        ),
                    by = .(SG_UF, name_region, ANO_ELEICAO, NR_TURNO, code_muni, CD_MUNICIPIO, PIB_PC)]
 
-head(df_muni)
+summary(df_muni)
 
 
 table(df_muni$passe_livre_always)

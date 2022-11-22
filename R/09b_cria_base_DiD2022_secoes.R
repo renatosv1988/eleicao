@@ -291,3 +291,5 @@ eleicao_2022 <- eleicao_2022[, ..my_var]
 fwrite(eleicao_2022, "../../data/base_DiD2022_secoes.csv")
 saveRDS(eleicao_2022, "../../data/base_DiD2022_secoes.rds",compress = T)
 
+summary(eleicao_2022$comparecimento_2022)
+summary(eleicao_2022$comparecimento_2018)

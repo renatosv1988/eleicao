@@ -17,7 +17,7 @@ df_secoes_2022 <- fread("../../data/base_DiD2022_secoes.csv")
 
 
 
-# percentage of voters living in cities with passe livre
+# percentage of voters living in cities with passe livre on the second round
 df_secoes_2022[NR_TURNO==2 & passe_livre==1, sum(QT_APTOS)] / df_secoes_2022[NR_TURNO==2, sum(QT_APTOS)]
 #> 0.4798155
 
@@ -27,7 +27,6 @@ df_secoes_2022[NR_TURNO==2 & passe_livre==1, sum(QT_APTOS)] / df_secoes_2022[NR_
 
 # keep only cities with public transport
 df_secoes_2022[, passe_livre_any := max(passe_livre), by = id_secao]
-
 df_secoes_2022 <- subset(df_secoes_2022, dummy_pt==1 | passe_livre_any ==1)
 
 
@@ -37,8 +36,8 @@ df_secoes_2022[, table(NR_TURNO, passe_livre)]
 
 #>            passe_livre
 #> NR_TURNO      0      1
-#>        1 393783  74474
-#>        2 258530 209725
+#>        1 267408  74474
+#>        2 132157 209725
 
 
 # identify treated in the 1st round
@@ -49,8 +48,8 @@ df_secoes_2022[, table(NR_TURNO, passe_livre_1)]
 
 #>          passe_livre_1
 #> NR_TURNO      0      1
-#>        1 393783  74474
-#>        2 393781  74474
+#>        1 267408  74474
+#>        2 267408  74474
 
 
 # drop always treated (1st round)
@@ -58,8 +57,8 @@ df_sections <- df_secoes_2022[ passe_livre_1 != 1]
 df_sections[, table(NR_TURNO, passe_livre)]
 #>            passe_livre
 #> NR_TURNO      0      1
-#>        1 393783      0
-#>        2 258530 135251
+#>        1 267408      0
+#>        2 132157 135251
 
 
 
@@ -70,8 +69,8 @@ df_sections[, turno2_dummy := fifelse(NR_TURNO==2, 1, 0)]
 df_sections[, table(NR_TURNO, passe_livre_2)]
 #>          passe_livre_2
 #> NR_TURNO      0      1
-#>        1 258532 135251
-#>        2 258530 135251
+#>        1 132157 135251
+#>        2 132157 135251
 
 
 
@@ -105,6 +104,9 @@ df_sections[, votos_jair_p := sum(votos_jair) / sum(votos_validos), by = .(ANO_E
 
       summary(df_sections$comparecimento_2018)
       summary(df_sections$comparecimento_2018b)
+
+      
+      
 
 # discretize edu
 my_breaks <- seq(0, 0.7, by=.1)
@@ -199,7 +201,7 @@ df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)
                            educacao_1 = weighted.mean(x=educacao_1, w=QT_APTOS, na.rm=T),
                            gov_2t = max(gov_2t),
                            PIB_PC = PIB_PC[1L],
-                           pib_log = log(PIB_PC)[1L],
+                           pib_log = log(PIB_PC[1L]),
                            passe_livre = max(passe_livre), 
                            passe_livre_1 = max(passe_livre_1), 
                            passe_livre_2 = max(passe_livre_2)),
@@ -251,18 +253,18 @@ df_sections[, table(passe_livre_2, turno2_dummy)]
 
 
 
-# 6666 add politica party
-df_muni <- left_join(df_muni, df_partido,
-                  by=c('code_muni'='id_municipio'), all.x = T)
-
-summary(df_muni$dummy_partidobase_2016)
-summary(df_muni$dummy_partidobase_2020)
-# 6666
-df_muni[is.na(dummy_partidobase_2020), dummy_partidobase_2020 := 1]
-df_muni[is.na(dummy_partidobase_2016), dummy_partidobase_2016 := 1]
-table(df_muni$dummy_partidobase_2016, useNA = 'always')
-
- 
+# # 6666 add politica party
+# df_muni <- left_join(df_muni, df_partido,
+#                   by=c('code_muni'='id_municipio'), all.x = T)
+# 
+# summary(df_muni$dummy_partidobase_2016)
+# summary(df_muni$dummy_partidobase_2020)
+# # 6666
+# df_muni[is.na(dummy_partidobase_2020), dummy_partidobase_2020 := 1]
+# df_muni[is.na(dummy_partidobase_2016), dummy_partidobase_2016 := 1]
+# table(df_muni$dummy_partidobase_2016, useNA = 'always')
+# 
+#  
 
 
 
@@ -272,7 +274,15 @@ summary(df_muni$votos_jair_muni_validos_p)
 summary(df_muni$biometria)
 table(df_muni$variacao_comparecimento_2018_muni)
 
-step1 <- glm(passe_livre_2 ~   variacao_comparecimento_2018_muni + gov_2t + name_region + biometria+ QT_APTOS_log + pib_log  + votos_jair_muni_validos_p ,
+l <- lm(passe_livre_2~ gov_2t + name_region + variacao_comparecimento_2018_muni + 
+              QT_APTOS_log + pib_log  + votos_jair_muni_validos_p ,
+             data = df_muni)
+
+summary(l)
+
+step1 <- glm(passe_livre_2~ gov_2t + name_region + variacao_comparecimento_2018_muni + 
+              QT_APTOS_log + pib_log  + votos_jair_muni_validos_p ,
+             
              family = binomial(link = 'logit'),
              data = df_muni)
 
