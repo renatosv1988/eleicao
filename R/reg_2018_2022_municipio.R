@@ -1,3 +1,8 @@
+######################## findings ######################## 
+
+#' 1st round of 2022 Vs 2018: negative non significant
+#' 2nd round of 2022 Vs 2018: negative non significant
+
 
 library(data.table)
 library(dplyr)
@@ -66,6 +71,8 @@ df_t2[, table(ANO_ELEICAO, passe_livre_2)]
 
 df_t1[, ano_2022_dummy := ifelse(ANO_ELEICAO==2022,1,0)]
 df_t2[, ano_2022_dummy := ifelse(ANO_ELEICAO==2022,1,0)]
+
+
 
 
 # Descriptive analysis ----------------------------------------------------------------------
