@@ -15,7 +15,7 @@ library(ggsci)
 
 `%nin%` = Negate(`%in%`)
 
-# function to renamte columns
+# function to rename columns
 toupper_noaccent <- function(i){
   stringi::stri_trans_general(i,id = "Latin-ASCII") %>% 
     toupper() %>% stringr::str_replace_all("-"," ")  %>% 
@@ -53,6 +53,7 @@ google <- fread('../../data_raw/google/google_mobility.csv', encoding = "UTF-8")
 
 # clean dates
 google[,date_fix := as.POSIXct(date,tz = "America/Bahia")]
+google[,year := format(date_fix,"%Y")]
 google[,year_month := format(date_fix,"%m/%Y")]
 google[,day_month := format(date_fix,"%d/%m")]
 google[,day_month_id := .GRP,by = date_fix]
@@ -63,24 +64,41 @@ max(google$date)
 # keep only data on Sundays close to the election dates
   # 1o turno:  2 de outubro de 2022
   # 2o turno: 30 de outubro de 2022
-  sundays <- c("2022-09-04",
-               "2022-09-11",
-               "2022-09-18",
-               "2022-09-25",
-               "2022-10-02",
-               "2022-10-09",
-               "2022-10-16",
-               "2022-10-23",
-               "2022-10-30") |> as.Date()
+  sundays <- 
+               # c("2022-09-04",
+               # "2022-09-11",
+               # "2022-09-18",
+               # "2022-09-25",
+               # "2022-10-02",
+               # "2022-10-09",
+               # "2022-10-16",
+               # "2022-10-23",
+               # "2022-10-30") 
+  c("2020-11-01",
+    "2020-11-08",
+    "2020-11-15",
+    "2020-11-22",
+    "2020-11-29",
+    "2022-09-04",
+    "2022-09-11",
+    "2022-09-18",
+    "2022-09-25",
+    "2022-10-02",
+    "2022-10-09",
+    "2022-10-16",
+    "2022-10-23",
+    "2022-10-30") |> as.Date()
   
   google_election <- subset(google, date %in% sundays)
   table(google_election$date)
   
   
   # identify election rounds
-  google_election[, NR_TURNO := fcase(date == as.IDate("2022-10-02"), 1,
+  google_election[, NR_TURNO := fcase(date == as.IDate("2020-11-15"), 1,
+                                      date == as.IDate("2020-11-29"), 2,
+                                      date == as.IDate("2022-10-02"), 1,
                                       date == as.IDate("2022-10-30"), 2)
-                                      ]
+  ]
   table(google_election$NR_TURNO)
   
   
@@ -135,34 +153,34 @@ google_election$name_muni %>% unique()
 passe <- fread('../../data/passe_livre/passe_livre.csv')
 head(passe$city_uf_ID)
 
-passe[, table(`1º Turno`, `2º Turno`)]
-#>         2º Turno
-#>                1
-#> 1º Turno   0 310
-#>            1  82
+passe[, table(passe_livre_t1, passe_livre_t2)]
+#>                passe_livre_t2
+#> passe_livre_t1   1
+#>              0 297
+#>              1  97
 
 # merge
 google_election_passe_livre <- left_join(google_election, passe, by=c('name_muni'='city_uf_ID'))
 setDT(google_election_passe_livre)
 
-table(passe$`1º Turno`, useNA = 'always')
-table(google_election_passe_livre$`1º Turno`, useNA = 'always')
+table(passe$passe_livre_t1, useNA = 'always')
+table(google_election_passe_livre$passe_livre_t1, useNA = 'always')
 
-# a <- google_election_passe_livre[is.na(`1º Turno`)]
+# a <- google_election_passe_livre[is.na(passe_livre_t1)]
 # a <- subset(a, !is.na(sub_region_2))
 # a <- subset(a, sub_region_2 != "")
 
 # we have info on passe livre for 392 cities
 passe$city_uf_ID |> length()
-#> 392
+#> 394
 
 # we have google info for 339 of those 392 cities
 sum(passe$city_uf_ID %in% google_election$name_muni)
-#> 339
+#> 344
 
 
-setnames(google_election_passe_livre, '1º Turno', 'passe_1')
-setnames(google_election_passe_livre, '2º Turno', 'passe_2')
+setnames(google_election_passe_livre, 'passe_livre_t1', 'passe_1')
+setnames(google_election_passe_livre, 'passe_livre_t2', 'passe_2')
 setnames(google_election_passe_livre, '1º e 2º Turno', 'passe_12')
 # setnames(google_election_passe_livre, 'Nível metropolitano', 'passe_metropolitano')
 # table(passe$Abrangência)
@@ -172,9 +190,9 @@ setnames(google_election_passe_livre, '1º e 2º Turno', 'passe_12')
 # melt data-------------
 
 google1 <- data.table::melt(data = google_election_passe_livre,
-                            id.vars = c('name_muni', 'date','date_fix',
+                            id.vars = c('name_muni', 'year', 'date','date_fix',
                                         'day_month_id','state_abbrev','sub_region_2',
-                                        'passe_1', 'passe_2', 'passe_12'),
+                                        'passe_1', 'passe_2'),
                             measure.vars =  c('retail_and_recreation_percent_change_from_baseline',
                                                               'grocery_and_pharmacy_percent_change_from_baseline',
                                                               'parks_percent_change_from_baseline',
@@ -230,24 +248,24 @@ temp_df <- subset(google1, variable %like% 'transit' & !is.na(sub_region_2))
 
 temp_df2 <- temp_df[, .(mean_value=mean(value, na.rm=T),
                         p25 = quantile(value,0.25, na.rm=T),
-                        p75 = quantile(value,0.75, na.rm=T)), by=.(variable, any_passe, date)]
+                        p75 = quantile(value,0.75, na.rm=T)), by=.(year, variable, any_passe, date)]
 
 
 
 ggplot() +
- geom_line(data=temp_df2, aes(x=as.Date(date), y=mean_value, color=any_passe),
+ geom_line(data=subset(temp_df2, year==2022), aes(x=as.Date(date), y=mean_value, color=any_passe),
            position = position_dodge2(width = 2)) +
- geom_pointrange(data=temp_df2,
+ geom_pointrange(data=subset(temp_df2, year==2022),
                  position = position_dodge2(width = 2),
                  show.legend = FALSE,
                  aes(x=as.Date(date), y=mean_value, color=any_passe,
                  ymin = p25,
                  ymax = p75)) +
  labs(y='Mobility change\nagainst baseline', x = 'Sunday', color='Round with\nfree transit') +
- scale_x_date( date_labels =  "%d %b", breaks =  sundays) +
+ scale_x_date( date_labels =  "%d %b", labels = sundays, breaks = sundays) +
  scale_y_continuous(expand = c(0,0)) +
- annotate("rect", xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
-          ymin = min(temp_df2$p25 - 3, na.rm=T), ymax = max(temp_df2$p75, na.rm=T), alpha = .1) +
+ # annotate("rect", xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
+ #          ymin = min(temp_df2$p25 - 3, na.rm=T), ymax = max(temp_df2$p75, na.rm=T), alpha = .1) +
  # scale_color_npg() +
  #scale_color_uchicago() +
  scale_color_jama() +

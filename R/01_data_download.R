@@ -242,6 +242,18 @@ download.file(url = "https://raw.githubusercontent.com/betafcc/Municipios-Brasil
 # 6666666666666666
 # https://dadosabertos.tse.jus.br/dataset/resultados-2014/resource/55f1f786-cbf8-4cec-a003-f349d1dfb77f
 
+
+#### urnas 2020 ---------------------------------------------------------------------
+# 6666666666666666
+# https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_partido_munzona/votacao_partido_munzona_2020.zip
+dir_urnas <- '../../data_raw/urnas_2020'
+dir.create(dir_urnas)
+
+# download data
+download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/detalhe_votacao_secao/detalhe_votacao_secao_2020.zip",
+              destfile = paste0(dir_urnas,"/votacao_2020.zip"))
+
+
 #### urnas 2022 ---------------------------------------------------------------------
 dir_urnas <- '../../data_raw/urnas_2022'
 dir.create(dir_urnas)
