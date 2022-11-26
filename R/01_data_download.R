@@ -29,12 +29,12 @@ library(httr)
 
 
 
-#### eleitorado secao (perfil) ----------------------------------------------------------
+#### eleitorado secao (perfil 2022) ----------------------------------------------------------
 #' perfil de escolaridade em cada zona
 #' https://dadosabertos.tse.jus.br/dataset/eleitorado-2022
 
 # create dir
-dir_eleitorado <- '../../data_raw/eleitorado_secao'
+dir_eleitorado <- '../../data_raw/eleitorado_secao_2022'
 dir.create(dir_eleitorado)
 
 # download data
@@ -72,6 +72,26 @@ for(i in 1:27){
 }
 
 
+
+
+#### eleitorado secao (perfil 2014) --------------------------------------------
+#' perfil de escolaridade em cada zona
+#' https://dadosabertos.tse.jus.br/dataset/eleitorado-2014
+
+# create dir
+dir_eleitorado <- '../../data_raw/eleitorado_secao_2014'
+dir.create(dir_eleitorado)
+
+# download data
+my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
+           "PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO")
+
+for(i in 1:27){
+ download.file(paste0("https://cdn.tse.jus.br/estatistica/sead/odsele/perfil_eleitor_secao/perfil_eleitor_secao_2014_",
+                      my_uf[i],".zip"),
+               destfile = paste0(dir_eleitorado, paste0("/eleitorado_",my_uf[i],"_2014.zip")))
+}
+
 #### zonas (spatial) --------------------------------------------------
 #' quantidade de eleitores registrados em cada secao e cada zona
 #' https://dadosabertos.tse.jus.br/dataset/eleitorado-2022
@@ -95,7 +115,7 @@ unzip(paste0(dir_zonas,"/zonas_2018.zip"), exdir = dir_zonas)
 
 
 #### secoes --------------------------------------------------
-#' Detalhe da apuração por seção eleitoral
+#' Detalhe da apuracao por secao eleitoral
 #' https://dadosabertos.tse.jus.br/dataset/resultados-2022
 
 # create dir
@@ -107,13 +127,8 @@ download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/detalhe_votacao_se
               destfile = paste0(dir_secoes, "/secoes_2022.zip"))
 download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/detalhe_votacao_secao/detalhe_votacao_secao_2018.zip",
               destfile = paste0(dir_secoes, "/secoes_2018.zip"))
-
-# unzip data to local dir
-unzip(paste0(dir_secoes, "/secoes_2022.zip"), exdir = dir_secoes)
-unzip(paste0(dir_secoes, "/secoes_2018.zip"), exdir = dir_secoes)
-
-
-
+download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/detalhe_votacao_secao/detalhe_votacao_secao_2014.zip",
+              destfile = paste0(dir_secoes, "/secoes_2014.zip"))
 
 
 
@@ -240,7 +255,14 @@ download.file(url = "https://raw.githubusercontent.com/betafcc/Municipios-Brasil
 
 #### urnas 2014 ---------------------------------------------------------------------
 # 6666666666666666
-# https://dadosabertos.tse.jus.br/dataset/resultados-2014/resource/55f1f786-cbf8-4cec-a003-f349d1dfb77f
+# https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_secao/votacao_secao_2014_BR.zip
+dir_urnas <- '../../data_raw/urnas_2014'
+dir.create(dir_urnas)
+
+# download data
+download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/votacao_secao/votacao_secao_2014_BR.zip",
+              destfile = paste0(dir_urnas,"/votacao_2014.zip"))
+
 
 
 #### urnas 2020 ---------------------------------------------------------------------

@@ -40,9 +40,10 @@ tictoc::tic()
  # remove temp files
  unlink(temp_dir_1, recursive = T)
  unlink(temp_dir_2, recursive = T)
+ rm(list=setdiff(ls(), c("urnas_T1", "urnas_T2")))
  gc()
  
- # filtrar para eleição presidencial apenas
+ # filtrar para eleicao presidencial apenas
  urnas_T1 <- setDT(subset(urnas_T1, DS_CARGO_PERGUNTA=="Presidente"))
  urnas_T2 <- setDT(subset(urnas_T2, DS_CARGO_PERGUNTA=="Presidente"))
  
@@ -102,9 +103,9 @@ votos_T1 <- data.table::rbindlist(lista_T1)
 votos_T2 <- data.table::rbindlist(lista_T2)
 
 # save to data dir
-dir.create('../../data/votes')
-fwrite(votos_T1, '../../data/votes/votos_T1.csv')
-fwrite(votos_T2, '../../data/votes/votos_T2.csv')
+dir.create('../../data/votes_2022')
+fwrite(votos_T1, '../../data/votes_2022/votos_T1.csv')
+fwrite(votos_T2, '../../data/votes_2022/votos_T2.csv')
 
 
 

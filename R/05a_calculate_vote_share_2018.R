@@ -40,6 +40,7 @@ tictoc::tic()
  # remove temp files
  unlink(temp_dir_1, recursive = T)
  unlink(temp_dir_2, recursive = T)
+ rm(list=setdiff(ls(), c("urnas_T1", "urnas_T2")))
  gc()
  # urnas_T1 <- read.csv(unz(path_zip_T1, path_csv_T1), sep = ";", encoding = "Latin-1")
  # urnas_T2 <- read.csv(unz(path_zip_T2, path_csv_T2), sep = ";", encoding = "Latin-1")
@@ -47,7 +48,7 @@ tictoc::tic()
  # urnas_T2 <- vroom(path_zip_T2, delim = ";") #, locale(encoding = "latin1"))
  
  
- # filtrar para eleição presidencial apenas
+ # filtrar para eleicao presidencial apenas
  urnas_T1 <- setDT(subset(urnas_T1, DS_CARGO_PERGUNTA=="Presidente"))
  urnas_T2 <- setDT(subset(urnas_T2, DS_CARGO_PERGUNTA=="Presidente"))
  

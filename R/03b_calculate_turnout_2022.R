@@ -1,5 +1,5 @@
 #' scripts	3 and 4 (calculate turnout) are unecessary because we get the same 
-#' info from scripts 5 and 6 (pq JÁ calculamos na 5 e 6 vote share) vote share
+#' info from scripts 5 and 6 (pq ja calculamos na 5 e 6 vote share) vote share
 
 library(data.table)
 library(dplyr)
@@ -26,6 +26,7 @@ secao <- fread(path_csv,
 
 # remove temp files
 unlink(temp_dir_1, recursive = T)
+rm(list=setdiff(ls(), "secao"))
 gc()
 
 # manter apenas votos para presidente no BR
