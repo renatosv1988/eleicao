@@ -5,13 +5,13 @@ library(ggplot2)
 library(scales)
 
 #minhas datas
-my_dates <- seq.Date(as.Date("2022-09-04"),as.Date("2022-10-23"),"7 days")
+my_dates <- seq.Date(as.Date("2022-09-04"),as.Date("2022-11-20"),"7 days")
 
 # read data
 data <- list()
 my_cols <-c("Data","Passageiros Pagantes", "Passageiros Com Gratuidade", "Tot Passageiros Transportados")
 for (i in 1 :length(my_dates)){# i<-1
- temp <- read_excel(paste0("./data_raw/sp/", my_dates[i],".xls"), skip = 2)
+ temp <- read_excel(paste0("../../data_raw/sp/", my_dates[i],".xls"), skip = 2)
  temp <- temp[,my_cols]
  colnames(temp) <- c("Data", "pag", "grat", "tot")
  data[[i]] <- temp
@@ -34,6 +34,7 @@ ggplot() +
  theme_classic() +
  coord_cartesian(ylim=c(0,3)) +
  geom_vline(xintercept = as.Date("2022-10-02"), linetype=3, alpha = 0.5) +
+ geom_vline(xintercept = as.Date("2022-10-30"), linetype=3, alpha = 0.5) +
  scale_y_continuous(labels=comma) +
  scale_x_date(breaks = my_dates, date_labels = "%d-%b") +
  labs(x = "Date", y="passengers (million)")
