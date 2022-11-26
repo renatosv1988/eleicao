@@ -31,8 +31,8 @@ gc()
 secao_br <- subset(secao, DS_CARGO == 'Presidente' & SG_UF != 'ZZ')
 
 # calcular comparecimento e abstencao
-secao_br[, comparecimento_2014 := QT_COMPARECIMENTO / QT_APTOS]
-secao_br[, abstencao_2014 := QT_ABSTENCOES / QT_APTOS]
+secao_br[, comparecimento_2010 := QT_COMPARECIMENTO / QT_APTOS]
+secao_br[, abstencao_2010 := QT_ABSTENCOES / QT_APTOS]
 
 # incluir 2o turno governador
 gov <- subset(secao, DS_CARGO == 'Governador' & SG_UF != 'ZZ' & NR_TURNO==2)
