@@ -22,7 +22,7 @@ secao <- fread(path_csv,
                encoding = "Latin-1")
 
 # remove temp files
-unlink(temp_dir_1, recursive = T)
+file.remove(path_csv)
 rm(list=setdiff(ls(), "secao"))
 gc()
 
