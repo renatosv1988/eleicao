@@ -50,6 +50,7 @@ temp_dt[, variacao_luva := votos_lula_p_t2 - votos_lula_p_t1]
 return(temp_dt)
 }
 
+df_2010 <- prep_data(eleicao_2010)
 df_2014 <- prep_data(eleicao_2014)
 df_2018 <- prep_data(eleicao_2018)
 df_2022 <- prep_data(eleicao_2022)
@@ -59,4 +60,4 @@ df <- rbind(df_2014, df_2018, df_2022)
 
 # salvar arquivo final----------------------------------------------------------
 
-head(df)
+fwrite(df, "../../data/base_DiD2010_2022_secoes.csv")
