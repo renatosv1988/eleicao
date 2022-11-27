@@ -130,12 +130,6 @@ download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/eleitorado_locais_
 download.file("https://cdn.tse.jus.br/estatistica/sead/odsele/eleitorado_locais_votacao/eleitorado_local_votacao_2010.zip",
               destfile = paste0(dir_zonas, "/zonas_2010.zip"))
 
-# unzip data to local dir
-unzip(paste0(dir_zonas,"/zonas_2022.zip"), exdir = dir_zonas)
-unzip(paste0(dir_zonas,"/zonas_2018.zip"), exdir = dir_zonas)
-unzip(paste0(dir_zonas,"/zonas_2014.zip"), exdir = dir_zonas)
-unzip(paste0(dir_zonas,"/zonas_2010.zip"), exdir = dir_zonas)
-
 
 
 
