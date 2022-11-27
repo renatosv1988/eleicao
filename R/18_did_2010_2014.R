@@ -5,11 +5,14 @@ library(ggplot2)
 # ler dados
 df <- fread("../../data/base_DiD2010_2022_secoes.csv", encoding = "Latin-1")
 table(df$ANO_ELEICAO)
+
 # filtrar apenas para seções tratadas
 st <- df[df$passe_livre_2==1,]
 
 # criar dummy de tratamento já no 1º turno
 st$pl1 <- ifelse(st$passe_livre_1==1,1,0)
+
+
 # criar dummy de tratamento apenas no 2º turno
 st$pl2 <- ifelse(st$passe_livre_1==0,1,0)
 
@@ -65,6 +68,7 @@ s03[1,] <- 0
 ss3 <- ss3[4:6,]
 ss3 <- rbind(s03,ss3)
 ss3$y <- "comp"
+
 # criar base de resultados para ggplot
 ss4 <- as.data.frame(summary(m4)$coeftable)
 s04 <- ss4[1,]
