@@ -82,7 +82,7 @@ names(model_list) <- c('Turnout 2022', 'Turnout 2018')
 
 
 # export table
-modelsummary::modelsummary(model_list, stars = T, output = './tables/table_did_avg.html')
+modelsummary::modelsummary(model_list, stars = T, output = './tables/table_did_avg_comparecimento_T1_.html')
 
 
 # export figure
