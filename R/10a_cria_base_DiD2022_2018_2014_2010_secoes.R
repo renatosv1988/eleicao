@@ -28,7 +28,7 @@ prep_data <- function(data){
  if(dt$ANO_ELEICAO[1L]==2022){ setnames(dt, 'comparecimento_2022', 'comparecimento') }
  if(dt$ANO_ELEICAO[1L]==2018){ setnames(dt, 'comparecimento_2018', 'comparecimento') }
  if(dt$ANO_ELEICAO[1L]==2014){ setnames(dt, 'comparecimento_2014', 'comparecimento') }
- if(dt$ANO_ELEICAO[1L]==2010){ setnames(dt, 'comparecimento_2014', 'comparecimento') }
+ if(dt$ANO_ELEICAO[1L]==2010){ setnames(dt, 'comparecimento_2010', 'comparecimento') }
 
   
  
@@ -56,7 +56,7 @@ df_2018 <- prep_data(eleicao_2018)
 df_2022 <- prep_data(eleicao_2022)
 
 
-df <- rbind(df_2014, df_2018, df_2022)
+df <- rbind(df_2010,df_2014, df_2018, df_2022)
 
 # salvar arquivo final----------------------------------------------------------
 
