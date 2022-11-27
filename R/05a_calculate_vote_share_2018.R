@@ -38,8 +38,8 @@ tictoc::tic()
  urnas_T2 <- fread( path_csv_T2, sep = ";", encoding = "Latin-1")
  
  # remove temp files
- unlink(temp_dir_1, recursive = T)
- unlink(temp_dir_2, recursive = T)
+ file.remove(path_csv_T1)
+ file.remove(path_csv_T2)
  rm(list=setdiff(ls(), c("urnas_T1", "urnas_T2")))
  gc()
  # urnas_T1 <- read.csv(unz(path_zip_T1, path_csv_T1), sep = ";", encoding = "Latin-1")

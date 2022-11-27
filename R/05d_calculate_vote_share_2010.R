@@ -21,7 +21,8 @@ urnas <- fread(path_csv,
                encoding = "Latin-1")
 
 # remove temp files
-unlink(temp_dir_1, recursive = T)
+file.remove(path_csv_T1)
+
 rm(list=setdiff(ls(), "urnas"))
 gc()
 
