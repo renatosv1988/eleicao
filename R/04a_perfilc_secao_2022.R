@@ -26,7 +26,8 @@ for(i in my_uf){ # i <- "AC"
  DF <- fread(path_csv)
  
  # remove temp files
- unlink(temp_dir_1, recursive = T)
+ file.remove(path_csv)
+ 
  gc()
  
  # recode
