@@ -26,16 +26,17 @@ df_secoes_2022[NR_TURNO==2 & passe_livre==1, sum(QT_APTOS)] / df_secoes_2022[NR_
 # Select observations ----------------------------------------------------------------------
 
 # keep only cities with public transport
-df_secoes_2022[, passe_livre_any := max(passe_livre), by = id_secao]
+df_secoes_2022[, passe_livre_any := max(passe_livre, passe_livre_always, na.rm = T), by = id_secao]
 df_sections <- subset(df_secoes_2022, dummy_pt==1 | passe_livre_any ==1)
+nrow(df_sections)
 
-
-# excluir cidades que SEMPRE tiveram passe livre
-df_sections <- subset(df_sections, is.na(passe_livre_always))
+# # excluir cidades que SEMPRE tiveram passe livre
+# df_sections <- subset(df_sections, is.na(passe_livre_always))
 
 
 # create dummy for 2nd round
 df_sections[, turno2_dummy := fifelse(NR_TURNO==2, 1, 0)]
+df_sections[, turno1_dummy := fifelse(NR_TURNO==1, 1, 0)]
 
 
 # identify treated in the 1st round
@@ -68,17 +69,17 @@ df_sections[, passe_livre_2 := ifelse( passe_livre_1 ==1 , 0, passe_livre_2)]
 df_sections[, table(turno2_dummy, passe_livre_2)]
 
 # check
-df_sections[turno2_dummy==1 & passe_livre_1==1]
 df_sections[id_secao == '4111 18 10', .(id_secao, NR_TURNO, turno2_dummy, passe_livre, passe_livre_1, passe_livre_2)]
 df_sections[id_secao == '35 2 10', .(id_secao, NR_TURNO, turno2_dummy, passe_livre, passe_livre_1, passe_livre_2)]
 
 
 
-df_sections[, table(turno2_dummy, passe_livre_2)]
-#>          passe_livre_2
-#> NR_TURNO      0      1
-#>        1 132157 135251
-#>        2 132157 135251
+
+df_sections[, table(passe_livre_2, turno2_dummy)]
+#>                turno2_dummy
+#> passe_livre_2      0      1
+#>             0 208841 208841
+#>             1 135251 135251
 
 
 
@@ -87,36 +88,6 @@ df_sections[, table(turno2_dummy, passe_livre_2)]
 # share of PT votes
 df_sections[, votos_lula_p := sum(votos_lula) / sum(votos_validos), by = .(ANO_ELEICAO, NR_TURNO, id_secao)]
 df_sections[, votos_jair_p := sum(votos_jair) / sum(votos_validos), by = .(ANO_ELEICAO, NR_TURNO, id_secao)]
-
-      # 66666 comparecimento baeyseano
-      df_sections <- df_sections[order(ANO_ELEICAO, id_secao, NR_TURNO)]
-      df_sections[, comparecimento_2022b := (comparecimento_2022 )/shift(comparecimento_2022), by =.(ANO_ELEICAO, id_secao)]
-      df_sections[NR_TURNO==1, comparecimento_2022b := 1]
-
-      summary(df_sections$comparecimento_2022)
-      summary(df_sections$comparecimento_2022b)
-      df_sections[1:4, .(id_secao, NR_TURNO, comparecimento_2022, comparecimento_2022b)] |> View()
-
-      # 2018
-      eleicao_2018 <- fread('../../data/base_DiD2018_secoes.csv')
-      eleicao_2018 <- eleicao_2018[order(ANO_ELEICAO, id_secao, NR_TURNO)]
-      eleicao_2018[, comparecimento_2018b := (comparecimento_2018 )/shift(comparecimento_2018), by =.(ANO_ELEICAO, id_secao)]
-      eleicao_2018[NR_TURNO==1, comparecimento_2018b := 1]
-
-      summary(eleicao_2018$comparecimento_2018)
-      summary(eleicao_2018$comparecimento_2018b)
-      eleicao_2018[1:4, .(id_secao, NR_TURNO, comparecimento_2018, comparecimento_2018b)] |> View()
-
-      eleicao_2018[, gov_2t2018 := gov_2t]
-      
-      df_sections <- left_join(df_sections, eleicao_2018[, .(NR_TURNO, id_secao, comparecimento_2018b, gov_2t2018)],
-                           by=c('NR_TURNO','id_secao'), all.x = T)
-
-      summary(df_sections$comparecimento_2018)
-      summary(df_sections$comparecimento_2018b)
-
-      
-
 
 # discretize edu
 my_breaks <- seq(0, 0.7, by=.1)
@@ -210,7 +181,7 @@ df_muni <- df_sections[, .(QT_APTOS = sum(QT_APTOS[which(NR_TURNO==2)], na.rm=T)
                            mean_dens_1000 = weighted.mean(x=num_1000, w=QT_APTOS, na.rm=T),  # pondera ou nao ?
                            educacao_1 = weighted.mean(x=educacao_1, w=QT_APTOS, na.rm=T),
                            gov_2t = max(gov_2t),
-                           gov_2t2018 = max(gov_2t2018),
+                           # gov_2t2018 = max(gov_2t2018),
                            PIB_PC = PIB_PC[1L],
                            pib_log = log(PIB_PC[1L]),
                            passe_livre = max(passe_livre), 
@@ -239,6 +210,7 @@ df_sections[, table(passe_livre_2, turno2_dummy)]
 #>             0 129640 129640
 #>             1 128577 128577
 
+df_sections[, table(passe_livre_1, turno1_dummy)]
 
          # 
          # # balancing before ipw 
@@ -286,13 +258,13 @@ summary(df_muni$biometria)
 table(df_muni$variacao_comparecimento_2018_muni)
 
 l <- lm(passe_livre_2~ gov_2t + name_region  + 
-              QT_APTOS_log + pib_log  + biometria + votos_jair_muni_validos_p ,
+              QT_APTOS_log + pib_log  +  votos_jair_muni_validos_p ,
              data = df_muni)
 
 summary(l)
 
 step1 <- glm(passe_livre_2~ gov_2t + name_region  + 
-              QT_APTOS_log + pib_log + biometria  + votos_jair_muni_validos_p ,
+              QT_APTOS_log + pib_log   + votos_jair_muni_validos_p ,
              
              family = binomial(link = 'logit'),
              data = df_muni)
