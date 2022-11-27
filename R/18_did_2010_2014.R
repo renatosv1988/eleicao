@@ -23,7 +23,6 @@ st$ano2014 <- ifelse(st$ano=="2014",1,0)
 st$ano2018 <- ifelse(st$ano=="2018",1,0)
 st$ano2022 <- ifelse(st$ano=="2022",1,0)
 
-st <- st[st$idade_60M<median(st$idade_60M, na.rm = T),]
 
 
 # regressão 1º turno
