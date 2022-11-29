@@ -43,6 +43,8 @@ sundays <- c(
              ) |> as.Date()
 
 
+google1 <- google1[passe_1 ==1 | passe_2 ==1 ]
+
 # filter days
 google_plot <- subset(google1, date %in% sundays)
 
@@ -68,7 +70,7 @@ ggplot() +
  scale_x_date( date_labels =  "%d %b", breaks =  sundays) +
  scale_y_continuous(expand = c(0,0)) +
  annotate("rect", xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
-          ymin = min(temp_df2$p25 - 3, na.rm=T), ymax = max(temp_df2$p75, na.rm=T), alpha = .1) +
+          ymin = min(temp_df$p25 - 3, na.rm=T), ymax = max(temp_df$p75, na.rm=T), alpha = .1) +
  # scale_color_npg() +
  #scale_color_uchicago() +
  scale_color_jama() +
