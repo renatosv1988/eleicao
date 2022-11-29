@@ -11,11 +11,12 @@ library(cowplot)
 df <- fread("../../data/base_DiD2010_2022_secoes.csv", encoding = "Latin-1")
 table(df$ANO_ELEICAO)
 
-# filtrar apenas para seções tratadas
+# filtrar apenas seções tratadas
 st <- df[df$passe_livre_2==1,]
 
 # criar dummy de tratamento já no 1º turno
 st$pl1 <- ifelse(st$passe_livre_1==1,1,0)
+
 # criar dummy de tratamento apenas no 2º turno
 st$pl2 <- ifelse(st$passe_livre_1==0,1,0)
 
