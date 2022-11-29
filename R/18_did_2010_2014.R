@@ -9,7 +9,8 @@ library(cowplot)
 
 # ler dados
 df <- fread("../../data/base_DiD2010_2022_secoes.csv", encoding = "Latin-1")
-table(df$ANO_ELEICAO)
+WM <- fread("../../data/pesos_municipio.csv", encoding = "Latin-1")
+
 
 # filtrar apenas para seções tratadas
 st <- df[df$passe_livre_2==1,]
@@ -25,7 +26,6 @@ st$ano <- as.character(st$ANO_ELEICAO)
 
 
 # ler pesos
-WM <- fread("R/descritivo_2010_2022/ipow_muni.csv")
 st <- merge(st, WM[,c("code_muni","ipw")], by="code_muni", all.x = T)
 
 
