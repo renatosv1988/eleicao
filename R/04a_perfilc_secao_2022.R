@@ -11,11 +11,12 @@ my_uf <- c("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG", "MS", "MT",
 
 # create list of results
 AG <- list()
+
 for(i in my_uf){ # i <- "AC"
  
  # unzip data
  temp_dir_1 <- tempdir()
- all_zip_files <- list.files("../../data_raw/eleitorado_secao", full.names = T)
+ all_zip_files <- list.files("../../data_raw/eleitorado_secao_2022", full.names = T)
  temp_zip <- all_zip_files[all_zip_files %like% paste0('_',i,'_')]
  files <- unzip(temp_zip, list=T)$Name
  path_csv_T1  <- files[files %like% '.csv']
