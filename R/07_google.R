@@ -192,7 +192,7 @@ setnames(google_election_passe_livre, '1º e 2º Turno', 'passe_12')
 google1 <- data.table::melt(data = google_election_passe_livre,
                             id.vars = c('name_muni', 'year', 'date','date_fix',
                                         'day_month_id','state_abbrev','sub_region_2',
-                                        'passe_1', 'passe_2'),
+                                        'passe_1', 'passe_2', 'passe_livre_always'),
                             measure.vars =  c('retail_and_recreation_percent_change_from_baseline',
                                                               'grocery_and_pharmacy_percent_change_from_baseline',
                                                               'parks_percent_change_from_baseline',
