@@ -11,25 +11,10 @@ library(data.table)
 library(magrittr)
 library(stringi)
 library(stringr)
-library(ggsci)
-
-`%nin%` = Negate(`%in%`)
-
-# function to rename columns
-toupper_noaccent <- function(i){
-  stringi::stri_trans_general(i,id = "Latin-ASCII") %>% 
-    toupper() %>% stringr::str_replace_all("-"," ")  %>% 
-    stringr::str_remove_all("'")
-}
 
 
 # Download data ---------------------------------------------------------------
 
-ls_initial_list <- c("google","activities","%nin%","toupper_noaccent")
-
-# first manipulation
-statebr <- geobr::read_state(code_state = "all") %>% data.table::setDT()
-statebr[,name_state := toupper_noaccent(name_state)]
 
 # static google url
 link <- "https://www.gstatic.com/covid19/mobility/Global_Mobility_Report.csv"
@@ -37,8 +22,11 @@ google <- data.table::fread(input = link, encoding = "UTF-8")
 
 summary(google$date)
 
+# keep data for Brazil
 google <- google[country_region %in% "Brazil",]
-summary(google$date)
+
+# keep data for 2021 and 2022
+google <- google[ date >= as.Date("2020-08-01")]
 
 # save to dara-raw
 dir.create('../../data_raw/google')
@@ -46,52 +34,48 @@ fwrite(google, '../../data_raw/google/google_mobility.csv')
 
 
 
-
 # Read and clean ---------------------------------------------------------------
+rm(list=ls())
+gc(reset = T)
 
 google <- fread('../../data_raw/google/google_mobility.csv', encoding = "UTF-8")
 
 # clean dates
-google[,date_fix := as.POSIXct(date,tz = "America/Bahia")]
-google[,year := format(date_fix,"%Y")]
-google[,year_month := format(date_fix,"%m/%Y")]
-google[,day_month := format(date_fix,"%d/%m")]
-google[,day_month_id := .GRP,by = date_fix]
+google[,year := format(date,"%Y")]
+google[,year_month := format(date,"%m/%Y")]
+google[,day_month := format(date,"%d/%m")]
+google[,day_month_id := .GRP,by = date]
 
-max(google$date)
-
-
-# keep only data on Sundays close to the election dates
-  # 1o turno:  2 de outubro de 2022
-  # 2o turno: 30 de outubro de 2022
-  sundays <- 
-               # c("2022-09-04",
-               # "2022-09-11",
-               # "2022-09-18",
-               # "2022-09-25",
-               # "2022-10-02",
-               # "2022-10-09",
-               # "2022-10-16",
-               # "2022-10-23",
-               # "2022-10-30") 
-  c("2020-11-01",
-    "2020-11-08",
-    "2020-11-15",
-    "2020-11-22",
-    "2020-11-29",
-    "2022-09-04",
-    "2022-09-11",
-    "2022-09-18",
-    "2022-09-25",
-    "2022-10-02",
-    "2022-10-09",
-    "2022-10-16",
-    "2022-10-23",
-    "2022-10-30") |> as.Date()
-  
-  google_election <- subset(google, date %in% sundays)
-  table(google_election$date)
-  
+summary(google$date)
+# 
+# 
+# # keep only data on Sundays close to the election dates
+#   # 1o turno:  2 de outubro de 2022
+#   # 2o turno: 30 de outubro de 2022
+#   sundays <- c(
+#                "2020-11-01",
+#                "2020-11-08",
+#                "2020-11-15",
+#                "2020-11-22",
+#                "2020-11-29",
+#                "2022-08-07",
+#                "2022-08-14",
+#                "2022-08-21",
+#                "2022-08-28",
+#                "2022-09-04",
+#                "2022-09-11",
+#                "2022-09-18",
+#                "2022-09-25",
+#                "2022-10-02",
+#                "2022-10-09",
+#                "2022-10-16",
+#                "2022-10-23",
+#                "2022-10-30") |> as.Date()
+#              
+#   google_election <- subset(google, date %in% sundays)
+#   table(google_election$date)
+#   
+  google_election <- copy(google)
   
   # identify election rounds
   google_election[, NR_TURNO := fcase(date == as.IDate("2020-11-15"), 1,
@@ -102,6 +86,19 @@ max(google$date)
   table(google_election$NR_TURNO)
   
   
+  
+
+    
+  # function to rename columns
+  toupper_noaccent <- function(i){
+   stringi::stri_trans_general(i,id = "Latin-ASCII") %>% 
+    toupper() %>% stringr::str_replace_all("-"," ")  %>% 
+    stringr::str_remove_all("'")
+  }
+  
+  # first manipulation
+  statebr <- geobr::read_state(code_state = "all") %>% data.table::setDT()
+  statebr[,name_state := toupper_noaccent(name_state)]
   
   
   # clean names
@@ -114,27 +111,9 @@ max(google$date)
   google_election[,name_muni := paste0(sub_region_2_fix," - ",state_abbrev)]
   
 
-activities <- c("retail_and_recreation",
-                #"grocery_and_pharmacy",
-                #"parks",
-                "transit_stations",
-                "workplaces",
-                "residential")
-local_categories <- c('Varejo e lazer',
-                      #'Mercados e farmácias',
-                      #'Parques',
-                      'Estações de transporte público',
-                      'Locais de trabalho','Residencial')
-description <- c('Tendências de mobilidade de lugares como restaurantes, cafés, \n shopping centers, parques temáticos, museus, bibliotecas e cinemas.',
-                 #'Tendências de mobilidade de lugares como mercados, armazéns de \n alimentos, feiras, lojas especializadas em alimentos, drogarias e farmácias.',
-                 #'Tendências de mobilidade de lugares como parques locais e nacionais, \n praias públicas, marinas, parques para cães, praças e jardins públicos.',
-                 'Tendências de mobilidade de lugares como terminais de transporte público,\n tipo estações de metrô, ônibus e trem',
-                 'Tendências de mobilidade de locais de trabalho',
-                 'Tendências de mobilidade de áreas residenciais')
 
+  
 
-
-#
 # check names-------------
 #
 google_election$sub_region_1 %>% unique()
@@ -148,9 +127,15 @@ google_election$state_abbrev %>% unique()
 google_election$name_muni %>% unique()
 
 
+# drop columns
+to_drop <- c('country_region_code', 'country_region', 'sub_region_1', 
+             'metro_area', 'iso_3166_2_code', 'census_fips_code', 'place_id')
+google_election[, c(to_drop) := NULL ]
+
 
 # bring passe livre information
-passe <- fread('../../data/passe_livre/passe_livre.csv')
+passe <- fread('../../data/passe_livre/passe_livre.csv', encoding = 'UTF-8')
+head(passe)
 head(passe$city_uf_ID)
 
 passe[, table(passe_livre_t1, passe_livre_t2)]
@@ -190,7 +175,7 @@ setnames(google_election_passe_livre, '1º e 2º Turno', 'passe_12')
 # melt data-------------
 
 google1 <- data.table::melt(data = google_election_passe_livre,
-                            id.vars = c('name_muni', 'year', 'date','date_fix',
+                            id.vars = c('name_muni', 'year', 'date',
                                         'day_month_id','state_abbrev','sub_region_2',
                                         'passe_1', 'passe_2', 'passe_livre_always'),
                             measure.vars =  c('retail_and_recreation_percent_change_from_baseline',
@@ -207,71 +192,6 @@ head(google1)
 dir.create('../../data/google')
 fwrite(google1, file = '../../data/google/google.csv')
 
-
-
-
-# plot -------------
-library(ggsci)
-library(ggplot2)
-
-# keep only data on Sundays close to the election dates
-# 1o turno:  2 de outubro de 2022
-# 2o turno: 30 de outubro de 2022
-sundays <- c("2022-09-04",
-             "2022-09-11",
-             "2022-09-18",
-             "2022-09-25",
-             "2022-10-02",
-             "2022-10-09",
-             "2022-10-16",
-             "2022-10-23",
-             "2022-10-30") |> as.Date()
-
-
-google1 <- fread(file = '../../data/google/google.csv')
-
-
-summary(google1$passe_1)
-summary(google1$passe_2)
-google1[, passe_1 := fifelse(is.na(passe_1), 0, passe_1)]
-google1[, passe_2 := fifelse(is.na(passe_2), 0, passe_2)]
-
-google1[, any_passe := fcase(passe_1==1 & passe_2==0, '1',
-                             passe_1==0 & passe_2==1, '2',
-                             passe_1==1 & passe_2==1, '1',
-                             default = 'Never')]
-
-google1[, any_passe := factor(any_passe, levels = c('Never', '1', '2'))]
-
-
-temp_df <- subset(google1, variable %like% 'transit' & !is.na(sub_region_2))
-
-temp_df2 <- temp_df[, .(mean_value=mean(value, na.rm=T),
-                        p25 = quantile(value,0.25, na.rm=T),
-                        p75 = quantile(value,0.75, na.rm=T)), by=.(year, variable, any_passe, date)]
-
-
-
-ggplot() +
- geom_line(data=subset(temp_df2, year==2022), aes(x=as.Date(date), y=mean_value, color=any_passe),
-           position = position_dodge2(width = 2)) +
- geom_pointrange(data=subset(temp_df2, year==2022),
-                 position = position_dodge2(width = 2),
-                 show.legend = FALSE,
-                 aes(x=as.Date(date), y=mean_value, color=any_passe,
-                 ymin = p25,
-                 ymax = p75)) +
- labs(y='Mobility change\nagainst baseline', x = 'Sunday', color='Round with\nfree transit') +
- scale_x_date( date_labels =  "%d %b", labels = sundays, breaks = sundays) +
- scale_y_continuous(expand = c(0,0)) +
- # annotate("rect", xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
- #          ymin = min(temp_df2$p25 - 3, na.rm=T), ymax = max(temp_df2$p75, na.rm=T), alpha = .1) +
- # scale_color_npg() +
- #scale_color_uchicago() +
- scale_color_jama() +
- theme_classic()
-
-ggsave('./figures/google_mobility.png', width = 16, height = 10, units='cm')
 
 
 

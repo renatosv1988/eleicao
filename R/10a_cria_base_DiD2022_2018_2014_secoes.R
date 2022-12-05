@@ -31,29 +31,29 @@ prep_data <- function(data){
   
  
  temp_dt <- dt[, .(comparecimento_t1 = comparecimento[which(NR_TURNO==1)],
-                            comparecimento_t2 = comparecimento[which(NR_TURNO==2)],
-                            votos_lula_p_t1 = votos_lula_p[which(NR_TURNO==1)],
-                            votos_lula_p_t2 = votos_lula_p[which(NR_TURNO==2)],
-                            # biometria  = mean(biometria), 
-                            idade_60M  = mean(idade_60M), 
-                            num_1000  = mean(num_1000),
-                            passe_livre_1 = passe_livre_1[1L],
-                            passe_livre_2 = passe_livre_2[1L]
-                            )
-                        , by=.(ANO_ELEICAO, SG_UF, CD_MUNICIPIO, code_muni, 
-                               PIB_PC, id_secao, passe_livre_always, dummy_pt)]
+                   comparecimento_t2 = comparecimento[which(NR_TURNO==2)],
+                   votos_lula_p_t1 = votos_lula_p[which(NR_TURNO==1)],
+                   votos_lula_p_t2 = votos_lula_p[which(NR_TURNO==2)],
+                   # biometria  = mean(biometria), 
+                   idade_60M  = idade_60M[1L], 
+                   educacao_1 = educacao_1[1L],
+                   num_1000  = num_1000[1L],
+                   passe_livre_1 = passe_livre_1[1L],
+                   passe_livre_2 = passe_livre_2[1L]
+                   ),
+               by=.(ANO_ELEICAO, SG_UF, CD_MUNICIPIO, code_muni, 
+                    PIB_PC, id_secao, passe_livre_always, dummy_pt)]
 
 temp_dt[, variacao_comparecimento := comparecimento_t2 - comparecimento_t1]
 temp_dt[, variacao_luva := votos_lula_p_t2 - votos_lula_p_t1]
 return(temp_dt)
 }
 
-df_2014 <- prep_data(eleicao_2014)
-df_2018 <- prep_data(eleicao_2018)
-df_2022 <- prep_data(eleicao_2022)
+output_list <- lapply(X = list(eleicao_2014, eleicao_2018, eleicao_2022),
+                      FUN = prep_data
+)
 
-
-df <- rbind(df_2014, df_2018, df_2022)
+df <- data.table::rbindlist(output_list)
 
 # salvar arquivo final----------------------------------------------------------
 
