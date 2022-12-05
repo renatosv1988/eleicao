@@ -9,7 +9,7 @@ library(cowplot)
 
 # ler dados
 df <- fread("../../data/base_DiD2010_2022_secoes.csv", encoding = "Latin-1")
-WM <- fread("../../data/pesos_municipio.csv", encoding = "Latin-1")
+WM <- fread("../../data/ipw_municipalities.csv", encoding = "Latin-1")
 
 
 # filtrar apenas seções tratadas
