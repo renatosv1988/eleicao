@@ -26,7 +26,6 @@ secao <- fread(path_csv,
 
 # remove temp files
 file.remove(path_csv)
-rm(list=setdiff(ls(), "secao"))
 gc()
 
 # manter apenas votos para presidente no BR

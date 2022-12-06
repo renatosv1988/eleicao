@@ -22,8 +22,6 @@ urnas <- fread(path_csv,
 
 # remove temp files
 file.remove(path_csv_T1)
-
-rm(list=setdiff(ls(), "urnas"))
 gc()
 
 

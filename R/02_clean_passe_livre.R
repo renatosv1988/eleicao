@@ -2,7 +2,7 @@ library(readxl)
 library(data.table)
 library(stringr)
 
-`%nin%` <- negate(`%in%`)
+`%nin%` <- Negate(`%in%`)
 
 
 # read passe livre

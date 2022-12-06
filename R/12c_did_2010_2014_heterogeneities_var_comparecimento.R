@@ -343,7 +343,7 @@ ggplot(data = output_age, aes(x= age_cat, y=coef, color=Weighted)) +
 
 
 
-p_var <- fig_urban + fig_edu + fig_dens +
+p_var <- fig_urban_var + fig_edu_var + fig_dens_var +
  plot_annotation(tag_levels = 'A') +
  plot_layout(ncol = 3)
 
@@ -361,11 +361,11 @@ ggsave(plot=a, file= './figures/fig_2_heterogeneity_AAA.png',
 
 ##### save plot --------------------------------------------------------------------
 
-ggsave(plot=p, file= './figures/fig_2_heterogeneity_comparecimento.png', 
+ggsave(plot=p_var, file= './figures/fig_2_heterogeneity_comparecimento_var.png', 
        width = 17.8, height = 8, units='cm', dpi = 300)
 
 
-ggsave(plot=p, file= './figures/fig_2_heterogeneity_comparecimento.pdf', 
+ggsave(plot=p_var, file= './figures/fig_2_heterogeneity_comparecimento_var.pdf', 
        width = 17.8, height = 8, units='cm', dpi = 300)
 
 

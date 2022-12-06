@@ -7,8 +7,8 @@ library(vroom)
 library(purrr)
 library(dplyr)
 
-`%nin%` <- negate(`%in%`)
-`%unlike%` <- negate(`%like%`)
+`%nin%` <- Negate(`%in%`)
+`%unlike%` <- Negate(`%like%`)
 
 
 # load data -------------------------------------------------------------------

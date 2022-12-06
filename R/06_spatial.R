@@ -36,7 +36,7 @@ path_csv <- paste0(temp_dir_1,'/',path_csv_T1)
 zonas <- fread( path_csv)
 
 # remove temp files
-unlink(temp_dir_1, recursive = T)
+file.remove(path_csv)
 gc()
 
 # remove zonas fora do Brasil
@@ -63,26 +63,7 @@ df_secoes[, number_of_sections := length(unique(NR_SECAO)), by= .(SG_UF, CD_MUNI
 
 
 
-# # function to identify the appropriate EPSG code for the utm projection of each section
-# # Universal Transverse Mercator (UTM)
-# # https://bookdown.org/robinlovelace/geocompr/reproj-geo-data.html
-# 
-# lonlat2UTM = function(lonlat) {
-#   utm = (floor((lonlat[1] + 180) / 6) %% 60) + 1
-#   if(lonlat[2] > 0) {
-#     utm + 32600
-#   } else{
-#     utm + 32700
-#   }
-# }
-# 
-# # find EPSG utm
-# df_secoes[, utm := lonlat2UTM(c(NR_LONGITUDE, NR_LATITUDE)) ]
-# head(df_secoes)
-# unique(df_secoes$utm)
 
-
-# df_secoes2 <- subset(df_secoes, CD_MUNICIPIO == 93360)
 
 
 #### Fix problematic coordinates ------------------------------------------------
@@ -160,8 +141,8 @@ subset(df_secoes_bad, SG_UF=='MG' & NR_ZONA==87 & NR_SECAO==183)
 # check number of missing and recovered cases
 
 df_secoes |> count(is.na(NR_LATITUDE) | NR_LATITUDE ==-1 )
-# 1: FALSE 378.655
-# 2:  TRUE 116.004
+# 1: FALSE 378.479
+# 2:  TRUE 116.180
 
 geocode |> count(is.na(tse_lat))
 # 1: FALSE 374.054
@@ -200,7 +181,7 @@ df_secoes_fixed <- rbind( rbind(temp_fixed[!is.na(lat) ], secoes_capivara ) )
 df_secoes_fixed[is.na(lat) | is.na(lon)] |> nrow()
 #> 0
 
-nrow(df_secoes_fixed2) == nrow(df_secoes)
+nrow(df_secoes_fixed) == nrow(df_secoes)
 #> TRUE
 
 summary(df_secoes_fixed$lat)
@@ -496,6 +477,9 @@ fwrite(df3, '../../data/spatial/electoral_sections_spatial.csv')
 
 
 
+
+
+
 # calculate distance to city center --------------------------------------------------
 
 # get data of city centers
@@ -503,7 +487,7 @@ city_centers_sf <- geobr::read_municipal_seat(year = 2010)
 city_centers_df <- sfheaders::sf_to_df(city_centers_sf, fill = TRUE)
 
 # zones data
-df3 <- fread('../../data/spatial/electoral_sections_spatial.csv')
+df_sections <- fread('../../data/spatial/electoral_sections_spatial.csv')
 
 # correspondence table of municipality codes
 rosetta <-  fread('../../data_raw/br_bd_diretorios_brasil_municipio.csv', encoding = "UTF-8")
@@ -511,28 +495,28 @@ head(rosetta)
 
 
 # # bring IBGE code_muni
-df3[rosetta, on = c('CD_MUNICIPIO'='id_municipio_tse'), code_muni := i.id_municipio]
-head(df3)
-summary(df3)
+df_sections[rosetta, on = c('CD_MUNICIPIO'='id_municipio_tse'), code_muni := i.id_municipio]
+head(df_sections)
+summary(df_sections)
 
 # bring sede muni coordinate
-df3[city_centers_df, on = 'code_muni', c('x_sede', 'y_sede') := list(i.x, i.y)]
-summary(df3$code_muni)
+df_sections[city_centers_df, on = 'code_muni', c('x_sede', 'y_sede') := list(i.x, i.y)]
+summary(df_sections$code_muni)
 
 
 # calculate distances
-# df3[ , dist_sede := geosphere::distGeo(matrix(c(lon, lat), ncol= 2), 
+# df_sections[ , dist_sede := geosphere::distGeo(matrix(c(lon, lat), ncol= 2), 
 #                                        matrix(c(x_sede, y_sede), ncol = 2))]
 
-df3[, dist_sede := dt.haversine(lat, lon, y_sede, x_sede)]
+df_sections[, dist_sede := dt.haversine(lat, lon, y_sede, x_sede)]
 
-head(df3)
+head(df_sections)
 
-summary(df3$dist_sede)
+summary(df_sections$dist_sede)
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-#>       3     853    2701    7633    8217 6293041     180 
+#>       3     853    2699    7625    8214 6293041     180
 
-summary(df3$num_1000)
+summary(df_sections$num_1000)
 
 
 
@@ -558,9 +542,10 @@ summary(df3$num_1000)
 tracts <- geobr::read_census_tract(code_tract = 'all', simplified = FALSE, year=2010)
 tracts <- dplyr::select(tracts, 'code_tract',  'zone', 'code_muni', 'name_muni')
 tracts_urban <- subset(tracts, zone == 'URBANO')
+gc()
+
 
 # sections
-df_sections <- fread('../../data/spatial/electoral_sections_spatial.csv')
 df_sections[, id_local_votacao := paste(CD_MUNICIPIO, NR_ZONA, NR_LOCAL_VOTACAO)]
 
 df_place <- df_sections[, .(code_muni, id_local_votacao, lon, lat)] 
@@ -592,7 +577,7 @@ sf_place_urban <- furrr::future_map(.x = unique(sf_place$code_muni),
                          .progress = TRUE) |> rbindlist()
 
 tictoc::toc()
-#> 191.32 sec elapsed
+#> 154.27 sec elapsed
 
 
 # Format data
@@ -631,3 +616,6 @@ summary(df_sections$num_10000)
 summary(df_sections$lat)
 
 table(df_sections$zone, useNA = 'always')
+#>  rural  urban   <NA> 
+#>  57011 437648      0 
+

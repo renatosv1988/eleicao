@@ -41,7 +41,6 @@ tictoc::tic()
   file.remove(path_csv_T1)
   file.remove(path_csv_T2)
  
- rm(list=setdiff(ls(), c("urnas_T1", "urnas_T2")))
  gc()
  
  # filtrar para eleicao presidencial apenas

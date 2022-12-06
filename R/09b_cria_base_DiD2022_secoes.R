@@ -7,8 +7,8 @@ library(vroom)
 library(purrr)
 library(dplyr)
 
-`%nin%` <- negate(`%in%`)
-`%unlike%` <- negate(`%like%`)
+`%nin%` <- Negate(`%in%`)
+`%unlike%` <- Negate(`%like%`)
 
 
 # load data -------------------------------------------------------------------
@@ -19,8 +19,8 @@ munic <- fread('../../data/munic/munic_dummy_pt.csv', encoding = 'UTF-8')
 corr_ibge_tse <- fread("../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv", encoding = "UTF-8")
 pib <- fread("../../data_raw/IBGE/PIBPC_2019_municipios.csv", encoding = "UTF-8")
 perfil <- fread('../../data/secoes/secoes_perfil_2022.csv')
-votos_T1 <- fread('../../data/votes/votos_T1.csv')
-votos_T2 <- fread('../../data/votes/votos_T2.csv')
+votos_T1 <- fread('../../data/votes_2022/votos_T1.csv')
+votos_T2 <- fread('../../data/votes_2022/votos_T2.csv')
 SE18 <- fread('../../data/base_DiD2018_secoes.csv')
 
 eleicao_2022_raw <- fread('../../data/secoes/secoes_2022.csv')
@@ -201,8 +201,7 @@ summary(eleicao_2022$comparecimento_2022)
 
 
 # adicionar variacao de comparecimento em 2018 por secao  -------------------
-summary(SE18$comparecimento)
-SE18[, comparecimento_2018 := comparecimento]
+summary(SE18$comparecimento_2018)
 
 #>    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 #>  0.0000  0.7500  0.8009  0.7940  0.8449  1.0000
