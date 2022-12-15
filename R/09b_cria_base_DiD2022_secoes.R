@@ -257,6 +257,11 @@ eleicao_2022 <- merge(eleicao_2022,
 
 summary(eleicao_2022$variacao_comparecimento_2018_muni)
 
+
+# total number o voters in 2022
+eleicao_2022[NR_TURNO==1, sum(QT_APTOS)]
+#> 155.631.548
+
 # salvar arquivo final----------------------------------------------------------
 # seleciona apenas variáveis que serão usadas
 my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NM_LOCAL_VOTACAO", "NR_SECAO",

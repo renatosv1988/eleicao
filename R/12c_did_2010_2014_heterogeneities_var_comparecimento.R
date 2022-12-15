@@ -115,12 +115,12 @@ reg_urban <- function(z){  # z = 'Urban'
             data = temp_df_section)
  
  
- output_m1 <- data.frame(Weighted = 'no',
+ output_m1 <- data.frame(Weighted = 'No',
                          zone = z,
                          coef = m1$coeftable[1, 1],
                          se = m1$coeftable[1, 2])
  
- output_m2 <- data.frame(Weighted = 'yes',
+ output_m2 <- data.frame(Weighted = 'Yes',
                          zone = z,
                          coef = m2$coeftable[1, 1],
                          se = m2$coeftable[1, 2])
@@ -181,7 +181,6 @@ output_edu <- purrr::map(.x = levels(st$educacao_1_decile),
 
 
 # by Density -----------------------------------------
-
 
 
 reg_dens <- function(q){  # q = 5
@@ -269,7 +268,7 @@ output_age <- purrr::map(.x = levels(st$idade_60M_decile),
 
 
 
-# Assemble figure  --------------------------------------------------------------------
+# Assemble figure with IPW --------------------------------------------------------------------
 
 # get max and min y values
 values <- lapply(c(output_urban$ymax, output_urban$ymin, 
@@ -281,16 +280,17 @@ min_y <- -1*max_y
 
 
 default_theme <- list( ylim(c(min_y, max_y)) ,
-                       geom_hline(yintercept = 0, color='gray80', linetype = 'dashed'),
                        scale_color_jama() ,
                        theme_classic() ,
                        theme(text = element_text(size=9))
                        )
 
 # urban
-fig_urban_var <- ggplot(data = output_urban, aes(x= zone, y=coef, color=Weighted)) +
- geom_point(position = position_dodge2(width = .3)) +
- geom_pointrange(position = position_dodge2(width = .3),
+fig_urban_var <- 
+ ggplot(data = output_urban, aes(x= zone, y=coef, color=Weighted)) +
+ geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
+ geom_point(position = position_dodge2(width = .2)) +
+ geom_pointrange(position = position_dodge2(width = .2),
                  aes(x=zone, y=coef,
                      ymin = ymin,
                      ymax = ymax)) +
@@ -305,8 +305,9 @@ fig_urban_var <- ggplot(data = output_urban, aes(x= zone, y=coef, color=Weighted
 
 # education
 fig_edu_var <- ggplot(data = output_edu, aes(x= edu_cat, y=coef, color=Weighted)) +
- geom_point(position = position_dodge2(width = .3)) +
- geom_pointrange(position = position_dodge2(width = .3),
+ geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
+ geom_point(position = position_dodge2(width = .8)) +
+ geom_pointrange(position = position_dodge2(width = .8),
                  aes(x= edu_cat, y=coef,
                      ymin = ymin,
                      ymax = ymax)) +
@@ -319,10 +320,12 @@ fig_edu_var <- ggplot(data = output_edu, aes(x= edu_cat, y=coef, color=Weighted)
 
 
 # density
-fig_dens_var <- ggplot(data = output_dens, aes(x= as.numeric(dens_cat), y=coef)) +
+fig_dens_var <- 
+ ggplot(data = output_dens, aes(x= as.numeric(dens_cat), y=coef)) +
+ geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
  geom_line(aes(color=Weighted)) +
- geom_ribbon(aes(fill=Weighted, ymax=coef + 1.96*se, ymin=coef - 1.96*se), alpha=.15) +
- labs(y='', x='Deciles of density\nof electoral sections') +
+ geom_ribbon(aes(fill=Weighted, ymax=coef + 1.96*se, ymin=coef - 1.96*se), alpha=.2) +
+ labs(y='', x='Deciles of density\nof polling stations') +
  scale_x_continuous(breaks = 1:10) +
  default_theme + 
  theme(legend.position="none")
@@ -331,12 +334,12 @@ fig_dens_var <- ggplot(data = output_dens, aes(x= as.numeric(dens_cat), y=coef))
 
 # age
 ggplot(data = output_age, aes(x= age_cat, y=coef, color=Weighted)) +
+ geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
  geom_point(position = position_dodge2(width = .3)) +
  geom_pointrange(position = position_dodge2(width = .3),
                  aes(x=age_cat, y=coef,
                      ymin = ymin,
                      ymax = ymax)) +
- geom_hline(yintercept = 0, color='gray20') +
  labs(x= 'Deciles of low\neldery individuals') +
  theme_classic()
 
@@ -349,25 +352,118 @@ p_var <- fig_urban_var + fig_edu_var + fig_dens_var +
 
 p_var
 
-a <- fig_urban + fig_edu + fig_dens +
-fig_urban_var + fig_edu_var + fig_dens_var +
+ 
+
+##### save plot
+
+ggsave(plot=p_var, file= './figures/fig_2_heterogeneity_var_ipw.pdf', 
+       width = 17.8, height = 8, units='cm', dpi = 300)
+
+
+
+
+
+
+
+# NO ipw --------------------------------------------------------------------
+
+output_urban <- subset(output_urban, Weighted == 'No')
+output_edu <- subset(output_edu, Weighted == 'No')
+output_dens <- subset(output_dens, Weighted == 'No')
+
+
+# get max and min y values
+values <- lapply(c(output_urban$ymax, output_urban$ymin, 
+                   output_edu$ymax, output_edu$ymin,
+                   output_dens$ymax, output_dens$ymin), FUN = base::abs)
+values <- unlist(values)
+max_y <- ifelse(max_y < 0.05, 0.05, max_y)
+min_y <- -1*max_y
+
+
+default_theme <- list( ylim(c(min_y, max_y)) ,
+                       scale_color_jama() ,
+                       theme_classic() ,
+                       theme(text = element_text(size=9))
+)
+
+# urban
+fig_urban_var <- 
+ ggplot(data = output_urban, aes(x= zone, y=coef)) +
+ geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
+ geom_point(color='#0e8bb1') +
+ geom_pointrange(color='#0e8bb1',
+                 aes(x=zone, y=coef,
+                     ymin = ymin,
+                     ymax = ymax)) +
+ labs(y='Estimate and 95% Conf. Int.', x = '') +
+ default_theme + 
+ theme(legend.position="none")
+
+
+
+
+
+
+# education
+fig_edu_var <- 
+ ggplot(data = output_edu, aes(x= edu_cat, y=coef, color=Weighted)) +
+ geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
+ geom_point(color='#d6a525') +
+ geom_pointrange(color='#d6a525',
+                 aes(x=edu_cat, y=coef,
+                     ymin = ymin,
+                     ymax = ymax)) +
+ labs(y='', x= 'Deciles of education') +
+ scale_x_continuous(breaks = 1:10) +
+ default_theme + 
+ scale_color_jama(guide = guide_legend()) +
+ theme(legend.position="bottom")
+
+
+
+# density
+fig_dens_var <- 
+ ggplot(data = output_dens, aes(x= as.numeric(dens_cat), y=coef)) +
+ geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
+ # geom_line(color='#B24745FF') +
+ # geom_ribbon(fill='#B24745FF', aes(ymax=coef + 1.96*se, ymin=coef - 1.96*se), alpha=.2) +
+ geom_point(color='#B24745FF') +
+ geom_pointrange(color='#B24745FF',
+                 aes(ymin = ymin,
+                     ymax = ymax)) +
+ labs(y='', x='Deciles of density\nof polling stations') +
+ scale_x_continuous(breaks = 1:10) +
+ default_theme + 
+ theme(legend.position="none")
+
+
+
+# age
+ggplot(data = output_age, aes(x= age_cat, y=coef, color=Weighted)) +
+ geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
+ geom_point(position = position_dodge2(width = .3)) +
+ geom_pointrange(position = position_dodge2(width = .3),
+                 aes(x=age_cat, y=coef,
+                     ymin = ymin,
+                     ymax = ymax)) +
+ labs(x= 'Deciles of low\neldery individuals') +
+ theme_classic()
+
+
+
+
+p_var <- fig_urban_var + fig_edu_var + fig_dens_var +
  plot_annotation(tag_levels = 'A') +
  plot_layout(ncol = 3)
 
-
-ggsave(plot=a, file= './figures/fig_2_heterogeneity_AAA.png', 
-       width = 17.8, height = 15, units='cm', dpi = 300)
+p_var
 
 
-##### save plot --------------------------------------------------------------------
 
-ggsave(plot=p_var, file= './figures/fig_2_heterogeneity_comparecimento_var.png', 
+##### save plot
+
+ggsave(plot=p_var, file= './figures/fig_2_heterogeneity_var.pdf', 
        width = 17.8, height = 8, units='cm', dpi = 300)
-
-
-ggsave(plot=p_var, file= './figures/fig_2_heterogeneity_comparecimento_var.pdf', 
-       width = 17.8, height = 8, units='cm', dpi = 300)
-
-
 
 

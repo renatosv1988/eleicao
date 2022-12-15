@@ -127,20 +127,28 @@ passe_livre[city_uf_ID %in% passe_livre_sempre$city_uf_ID, passe_livre_always :=
 
 table(passe_livre$passe_livre_t1, useNA = 'always')
 #>    0    1 <NA> 
-#>  298  135    0 
+#>  297  135    0 
 
 table(passe_livre$passe_livre_t2, useNA = 'always')
-#>  0    1 <NA> 
-#>  1  433    0
+#>    1 <NA> 
+#>  432    0
 
 
 table(passe_livre$passe_livre_always, useNA = 'always')
 #>   1 <NA> 
-#>  53  380 
+#>  53  379 
 
+# get population of municipalities that only adopted PL on the 2nd round
+pop <- passe_livre[ passe_livre_t2==1 & is.na(passe_livre_always), ]
+setnames(pop, 'População (2020)', 'pop2020')
 
+summary(pop$pop2020)
 
+pop[ is.na(pop2020)]
+pop[city_uf_ID=='MURIAE - MG', pop2020 := 109392]
 
+sum(pop$pop2020, na.rm=T)
+#> 102.551.295
 
 # subset of columns
 passe_livre_resumo <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t1","passe_livre_t2", "passe_livre_always")]

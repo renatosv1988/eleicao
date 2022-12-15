@@ -77,72 +77,72 @@ temp_df <- google_plot[, .(mean_value=mean(value, na.rm=T),
 temp_df[, passe_1 := ifelse(passe_1==1, 'Yes', 'No')]
 
 
-
-
-# plot all  ----------------------------------------------------------------
-
-fig_all <- ggplot() +
-           annotate("rect", fill='gray95', xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
-                    ymin = min(temp_df$p25 - 3, na.rm=T), ymax = max(temp_df$p75, na.rm=T)) +
-           geom_line(data=temp_df, aes(x=as.Date(date), y=mean_value, color=factor(passe_1)),
-                     position = position_dodge2(width = 2)) +
-           geom_pointrange(data=temp_df,
-                           position = position_dodge2(width = 2),
-                           show.legend = FALSE,
-                           aes(x=as.Date(date), y=mean_value, color=factor(passe_1),
-                               ymin = p25,
-                               ymax = p75)) +
-            facet_wrap(~variable) +
-            geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
-            labs(y='Mobility change against baseline', x = 'Sunday', color='Treated in\nround 1') +
-           scale_x_date( date_labels =  "%d %b", breaks =  sundays[c(1,4,6,8,9)] ) +
-           scale_y_continuous(expand = c(0,0)) +
-           theme_classic() +
-           scale_color_npg() +
-           theme(text = element_text(size=9))
-
-fig_all
-
-ggsave(fig_all, file='./figures/google_mobility_all.png', 
-       width = 17.1, height = 10, units='cm', dpi = 300)
-
-
-
-
-# plot TRANSIT  ----------------------------------------------------------------
-
-
-temp_df_T <- subset(temp_df, variable %like% 'transit')
-
-fig_m <- ggplot() +
- annotate("rect", fill='gray95', xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
-          ymin = min(temp_df_T$p25 - 3, na.rm=T), ymax = max(temp_df_T$p75, na.rm=T)) +
- geom_line(data=temp_df_T, aes(x=as.Date(date), y=mean_value, color=factor(passe_1)),
-           position = position_dodge2(width = 2)) +
- geom_pointrange(data=temp_df_T,
-                 position = position_dodge2(width = 2),
-                 show.legend = FALSE,
-                 aes(x=as.Date(date), y=mean_value, color=factor(passe_1),
-                     ymin = p25,
-                     ymax = p75)) +
- # facet_wrap(~variable) +
- labs(y='Mobility change against baseline', x = 'Sunday', color='Treated in\nround 1') +
- geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
- scale_x_date( date_labels =  "%d %b", breaks =  sundays[c(1,4,6,8,9)] ) +
- scale_y_continuous(expand = c(0,0)) +
- theme_classic() +
- theme(text = element_text(size=9)) +
- scale_color_npg(guide = guide_legend()) +
- theme(legend.position="bottom")
-
-fig_m
-
-
-ggsave(fig_m, file='./figures/google_mobility_transit.png', 
-       width = 17.1, height = 10, units='cm', dpi = 300)
-
-
-
+# 
+# 
+# # plot all  ----------------------------------------------------------------
+# 
+# fig_all <- ggplot() +
+#            annotate("rect", fill='gray95', xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
+#                     ymin = min(temp_df$p25 - 3, na.rm=T), ymax = max(temp_df$p75, na.rm=T)) +
+#            geom_line(data=temp_df, aes(x=as.Date(date), y=mean_value, color=factor(passe_1)),
+#                      position = position_dodge2(width = 2)) +
+#            geom_pointrange(data=temp_df,
+#                            position = position_dodge2(width = 2),
+#                            show.legend = FALSE,
+#                            aes(x=as.Date(date), y=mean_value, color=factor(passe_1),
+#                                ymin = p25,
+#                                ymax = p75)) +
+#             facet_wrap(~variable) +
+#             geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
+#             labs(y='Mobility change against baseline', x = 'Sunday', color='Treated in\nround 1') +
+#            scale_x_date( date_labels =  "%d %b", breaks =  sundays[c(1,4,6,8,9)] ) +
+#            scale_y_continuous(expand = c(0,0)) +
+#            theme_classic() +
+#            scale_color_npg() +
+#            theme(text = element_text(size=9))
+# 
+# fig_all
+# 
+# ggsave(fig_all, file='./figures/google_mobility_all.png', 
+#        width = 17.1, height = 10, units='cm', dpi = 300)
+# 
+# 
+# 
+# 
+# # plot TRANSIT  ----------------------------------------------------------------
+# 
+# 
+# temp_df_T <- subset(temp_df, variable %like% 'transit')
+# 
+# fig_m <- ggplot() +
+#  annotate("rect", fill='gray95', xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
+#           ymin = min(temp_df_T$p25 - 3, na.rm=T), ymax = max(temp_df_T$p75, na.rm=T)) +
+#  geom_line(data=temp_df_T, aes(x=as.Date(date), y=mean_value, color=factor(passe_1)),
+#            position = position_dodge2(width = 2)) +
+#  geom_pointrange(data=temp_df_T,
+#                  position = position_dodge2(width = 2),
+#                  show.legend = FALSE,
+#                  aes(x=as.Date(date), y=mean_value, color=factor(passe_1),
+#                      ymin = p25,
+#                      ymax = p75)) +
+#  # facet_wrap(~variable) +
+#  labs(y='Mobility change against baseline', x = 'Sunday', color='Treated in\nround 1') +
+#  geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
+#  scale_x_date( date_labels =  "%d %b", breaks =  sundays[c(1,4,6,8,9)] ) +
+#  scale_y_continuous(expand = c(0,0)) +
+#  theme_classic() +
+#  theme(text = element_text(size=9)) +
+#  scale_color_npg(guide = guide_legend()) +
+#  theme(legend.position="bottom")
+# 
+# fig_m
+# 
+# 
+# ggsave(fig_m, file='./figures/google_mobility_transit.png', 
+#        width = 17.1, height = 10, units='cm', dpi = 300)
+# 
+# 
+# 
 
 
 
@@ -237,12 +237,17 @@ temp_df <- copy(reg_output_df)
 max_y <- max(c(abs(temp_df$ymin), temp_df$ymax))
 min_y <- -1*max_y
 
+# labels to camel case
+temp_df$activity <- stringr::str_replace(temp_df$activity, "_", " " )
+temp_df$activity <- stringr::str_replace(temp_df$activity, "_", " " )
+temp_df$activity <- stringr::str_replace(temp_df$activity, "and", "&" )
+temp_df$activity <- sub('^(\\w?)', '\\U\\1', temp_df$activity, perl=T)
 
 fig_all_reg <- 
 ggplot(data = temp_df, aes(x= date, y=coef, color=activity)) +
  annotate("rect", fill='gray95', xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
           ymin = min(temp_df$temp_df, na.rm=T), ymax = max(temp_df$temp_df, na.rm=T)) +
- scale_x_date( date_labels =  "%d %b", breaks =  sundays[c(1,4,6,8)] ) +
+ scale_x_date( date_labels =  "%d %b", breaks =  sundays[c(1,5,8)] ) +
  labs(y='Estimate and 95% Conf. Int.', x = 'Sundays') +
  geom_vline(xintercept = as.Date("2022-09-25"), color='gray80', linetype = 'dashed') +
  geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
@@ -260,10 +265,10 @@ ggplot(data = temp_df, aes(x= date, y=coef, color=activity)) +
 
 fig_all_reg
 
-ggsave(fig_all_reg, file='./figures/google_mobility_all_reg.png', 
-       width = 17.1, height = 15, units='cm', dpi = 300)
+ggsave(fig_all_reg, file='./figures/si_1_mobility_all.pdf', 
+       width = 15, height = 12, units='cm', dpi = 300)
 
-
+temp_df[ date=='2022-10-02' & p_value < 0.05]
 
 
 # plot TRANSIT  reg ----------------------------------------------------------------
@@ -280,24 +285,25 @@ fig_t <-
  ggplot(data = temp_df, aes(x= date, y=coef, color=activity)) +
  annotate("rect", fill='gray95', xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
           ymin = min(temp_df$temp_df, na.rm=T), ymax = max(temp_df$temp_df, na.rm=T)) +
- scale_x_date( date_labels =  "%d %b", breaks =  sundays[c(1,4,6,8)] ) +
+ scale_x_date( date_labels =  "%d %b", breaks =  sundays[c(1,5,8)] ) +
  labs(y='Estimate and 95% Conf. Int.', x = 'Sundays') +
  geom_vline(xintercept = as.Date("2022-09-25"), color='gray80', linetype = 'dashed') +
  geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
- geom_point() +
- geom_pointrange(aes(x=date, y=coef,
+ geom_point(color='#B24745FF') +
+ geom_pointrange(color='#B24745FF',
+                 aes(x=date, y=coef,
                      ymin = ymin,
                      ymax = ymax)) +
  ylim(c(min_y, max_y)) +
  theme_classic() +
  theme(text = element_text(size=9),
-       legend.position="none") +
- scale_color_npg()
+       legend.position="none") # + scale_color_npg()
 
 
 fig_t
 
-ggsave(fig_t, file='./figures/google_mobility_transit_reg.png', 
-       width = 17.1, height = 10, units='cm', dpi = 300)
+saveRDS(fig_t,file='./figures/fig_1A.rds')
+
+
 
 
