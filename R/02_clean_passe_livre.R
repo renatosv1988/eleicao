@@ -138,6 +138,17 @@ table(passe_livre$passe_livre_always, useNA = 'always')
 #>   1 <NA> 
 #>  53  379 
 
+
+# cities with METRO only
+setnames(passe_livre,'Nível municipal', 'nivel_muni')
+setnames(passe_livre,'Nível metropolitano', 'nivel_metro')
+
+table(passe_livre$nivel_muni)
+table(passe_livre$nivel_metro)
+passe_livre[, metro_only := fifelse(nivel_muni=='N' & nivel_metro == 'S', 1, 0)]
+table(passe_livre$metro_only)
+
+
 # get population of municipalities that only adopted PL on the 2nd round
 pop <- passe_livre[ passe_livre_t2==1 & is.na(passe_livre_always), ]
 setnames(pop, 'População (2020)', 'pop2020')
@@ -150,8 +161,13 @@ pop[city_uf_ID=='MURIAE - MG', pop2020 := 109392]
 sum(pop$pop2020, na.rm=T)
 #> 102.551.295
 
+
+
+
+
+
 # subset of columns
-passe_livre_resumo <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t1","passe_livre_t2", "passe_livre_always")]
+passe_livre_resumo <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t1","passe_livre_t2", "passe_livre_always", "metro_only")]
 
 # save
 dir_passe_livre <- '../../data/passe_livre'

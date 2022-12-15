@@ -151,17 +151,16 @@ setDT(google_election_passe_livre)
 table(passe$passe_livre_t1, useNA = 'always')
 table(google_election_passe_livre$passe_livre_t1, useNA = 'always')
 
-# a <- google_election_passe_livre[is.na(passe_livre_t1)]
-# a <- subset(a, !is.na(sub_region_2))
-# a <- subset(a, sub_region_2 != "")
 
-# we have info on passe livre for 392 cities
+
+
+# we have info on passe livre for 432 cities
 passe$city_uf_ID |> length()
-#> 394
 
-# we have google info for 339 of those 392 cities
+
+# we have google info for 339 of those 400 cities
 sum(passe$city_uf_ID %in% google_election$name_muni)
-#> 344
+
 
 
 setnames(google_election_passe_livre, 'passe_livre_t1', 'passe_1')
@@ -177,7 +176,7 @@ setnames(google_election_passe_livre, '1º e 2º Turno', 'passe_12')
 google1 <- data.table::melt(data = google_election_passe_livre,
                             id.vars = c('name_muni', 'year', 'date',
                                         'day_month_id','state_abbrev','sub_region_2',
-                                        'passe_1', 'passe_2', 'passe_livre_always'),
+                                        'passe_1', 'passe_2', 'passe_livre_always', 'metro_only'),
                             measure.vars =  c('retail_and_recreation_percent_change_from_baseline',
                                                               'grocery_and_pharmacy_percent_change_from_baseline',
                                                               'parks_percent_change_from_baseline',

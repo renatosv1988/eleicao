@@ -29,6 +29,9 @@ st <- merge(df_secoes_2022, muni_ipw, by="code_muni", all.x = T)
 
 # Select observations ----------------------------------------------------------------------
 
+# metro only 6666666666666666
+# st <- subset(st, metro_only == 0)
+
 
 # determine passe livre in each round
 st[, passe_livre_1 := max(NR_TURNO==1 & passe_livre==1), by = id_secao]
@@ -460,6 +463,7 @@ values <- lapply(c(output_urban$ymax, output_urban$ymin,
                    output_edu$ymax, output_edu$ymin,
                    output_dens$ymax, output_dens$ymin), FUN = base::abs)
 values <- unlist(values)
+max_y <- max(values)
 max_y <- ifelse(max_y < 0.05, 0.05, max_y)
 min_y <- -1*max_y
 

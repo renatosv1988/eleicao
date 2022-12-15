@@ -87,6 +87,9 @@ st[, year := as.character(ANO_ELEICAO)]
  length(unique(c(pl_1, pl_2)))
 
 
+ # metro only 6666666666666666
+ # st <- subset(st, metro_only == 0)
+ 
   
 # A) Turnout in 1st round -----------------------------------------
 
@@ -211,7 +214,7 @@ fig_a <-
 fig_t <- readRDS(file='./figures/fig_1A.rds')
 
 
-p <- fig_a + fig_b + fig_t +
+p <- fig_a + fig_b +  fig_t +
      plot_annotation(tag_levels = 'A') +
      plot_layout(ncol = 3)
 

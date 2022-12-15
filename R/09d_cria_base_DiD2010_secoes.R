@@ -107,11 +107,11 @@ eleicao_2010[ is.na(educacao_1) , .N] / nrow(eleicao_2010)
 t1 <- subset(eleicao_2010, NR_TURNO==1)
 t2 <- subset(eleicao_2010, NR_TURNO==2)
 
-passe_livre_t1 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t1", "passe_livre_always")]
-colnames(passe_livre_t1) <-c("CD_MUNICIPIO", "passe_livre", "passe_livre_always") 
+passe_livre_t1 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t1", "passe_livre_always", "metro_only")]
+colnames(passe_livre_t1) <-c("CD_MUNICIPIO", "passe_livre", "passe_livre_always", "metro_only") 
 
-passe_livre_t2 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t2", "passe_livre_always")]
-colnames(passe_livre_t2) <-c("CD_MUNICIPIO", "passe_livre", "passe_livre_always") 
+passe_livre_t2 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t2", "passe_livre_always", "metro_only")]
+colnames(passe_livre_t2) <-c("CD_MUNICIPIO", "passe_livre", "passe_livre_always", "metro_only") 
 
 # merge data
 t1 <- merge(t1, passe_livre_t1, by="CD_MUNICIPIO", all.x = T)
@@ -223,7 +223,7 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
             "num_5000","num_10000", 'zone',
             "votos_lula", "votos_total",
             "votos_nulo" , "votos_validos", "votos_branco", 
-            "dummy_pt", "passe_livre", "passe_livre_always", "PIB_PC")
+            "dummy_pt", "passe_livre", "passe_livre_always", "metro_only", "PIB_PC")
 
 eleicao_2010 <- eleicao_2010[, ..my_var]
 

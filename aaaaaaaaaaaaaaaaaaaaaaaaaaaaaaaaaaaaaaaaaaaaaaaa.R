@@ -8,7 +8,9 @@ RSV, RHMP, DTF and RD performed research;
 RHMP, RSV, RB and DTF analyzed data;
 
 *liderou escrita do artigo*
-RHMP, RSV, and RD wrote the paper
+RHMP, FB, and RSV wrote the paper
+
+RHMP, RSV, RB, FB, and RD designed research; RSV, RHMP, DTF and RD performed research; RHMP, RSV, RB and DTF analyzed data; RHMP, FB, and RSV wrote the paper
 
  
 #ORCID -----------------------------------------

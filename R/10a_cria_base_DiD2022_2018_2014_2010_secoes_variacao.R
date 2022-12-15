@@ -38,7 +38,8 @@ prep_data <- function(data){  # dt <- copy(eleicao_2022)
                    educacao_1 = educacao_1[1L],
                    num_1000  = num_1000[1L],
                    passe_livre_1 = passe_livre_1[1L],
-                   passe_livre_2 = passe_livre_2[1L]
+                   passe_livre_2 = passe_livre_2[1L],
+                   metro_only = metro_only[1L]
                    ),
                by=.(ANO_ELEICAO, SG_UF, CD_MUNICIPIO, code_muni,
                     PIB_PC, id_secao, passe_livre_always, dummy_pt)]

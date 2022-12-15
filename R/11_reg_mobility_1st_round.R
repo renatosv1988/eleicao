@@ -20,6 +20,8 @@ google1 <- subset(google1, !is.na(sub_region_2))
 # excluir cidades que SEMPRE tiveram passe livre
 google1 <- subset(google1, is.na(passe_livre_always))
 
+# metro only 6666666666666666
+# google1 <- subset(google1, metro_only == 0)
 
 
 # keep only municipalities that were eventually treated

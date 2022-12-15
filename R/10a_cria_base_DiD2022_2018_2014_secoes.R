@@ -39,8 +39,9 @@ prep_data <- function(data){
                    educacao_1 = educacao_1[1L],
                    num_1000  = num_1000[1L],
                    passe_livre_1 = passe_livre_1[1L],
-                   passe_livre_2 = passe_livre_2[1L]
-                   ),
+                   passe_livre_2 = passe_livre_2[1L],
+                   metro_only = metro_only[1L]
+ ),
                by=.(ANO_ELEICAO, SG_UF, CD_MUNICIPIO, code_muni, 
                     PIB_PC, id_secao, passe_livre_always, dummy_pt)]
 
@@ -50,8 +51,7 @@ return(temp_dt)
 }
 
 output_list <- lapply(X = list(eleicao_2014, eleicao_2018, eleicao_2022),
-                      FUN = prep_data
-)
+                      FUN = prep_data)
 
 df <- data.table::rbindlist(output_list)
 

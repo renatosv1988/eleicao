@@ -108,11 +108,11 @@ eleicao_2018[ is.na(educacao_1) , .N] / nrow(eleicao_2018)
 t1 <- subset(eleicao_2018, NR_TURNO==1)
 t2 <- subset(eleicao_2018, NR_TURNO==2)
 
-passe_livre_t1 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t1", "passe_livre_always")]
-colnames(passe_livre_t1) <-c("CD_MUNICIPIO", "passe_livre", "passe_livre_always") 
+passe_livre_t1 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t1", "passe_livre_always", "metro_only")]
+colnames(passe_livre_t1) <-c("CD_MUNICIPIO", "passe_livre", "passe_livre_always", "metro_only") 
 
-passe_livre_t2 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t2", "passe_livre_always")]
-colnames(passe_livre_t2) <-c("CD_MUNICIPIO", "passe_livre", "passe_livre_always") 
+passe_livre_t2 <- passe_livre[,c("CD_MUNICIPIO", "passe_livre_t2", "passe_livre_always", "metro_only")]
+colnames(passe_livre_t2) <-c("CD_MUNICIPIO", "passe_livre", "passe_livre_always", "metro_only") 
 
 # merge data
 t1 <- merge(t1, passe_livre_t1, by="CD_MUNICIPIO", all.x = T)
@@ -127,11 +127,11 @@ eleicao_2018[is.na(passe_livre), passe_livre := 0]
 
 table(eleicao_2018$passe_livre, useNA = 'always')
 #>       0      1   <NA> 
-#>  628968 277640      0 
+#>  622290 284318      0 
 
 table(eleicao_2018$passe_livre_always, useNA = 'always')
 #>     1   <NA> 
-#>  4094 902514 
+#>  10772 895836 
 
 
 # MERGE PIB_PC 2019 ------------------------------------------------------------
@@ -237,7 +237,7 @@ my_var <- c("id_secao",  "CD_MUNICIPIO","NR_ZONA", "NR_SECAO",
             "num_5000","num_10000", 'zone',
             "votos_lula", "votos_jair", "votos_total",
             "votos_nulo" , "votos_validos", "votos_branco", 
-            "dummy_pt", "passe_livre", "passe_livre_always", "PIB_PC")
+            "dummy_pt", "passe_livre", "passe_livre_always", "metro_only", "PIB_PC")
 
 eleicao_2018 <- eleicao_2018[, ..my_var]
 

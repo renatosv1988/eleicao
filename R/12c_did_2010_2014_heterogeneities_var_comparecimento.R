@@ -25,6 +25,9 @@ st <- merge(df, muni_ipw, by="code_muni", all.x = T)
 
 # Select observations ----------------------------------------------------------------------
 
+# metro only 6666666666666666
+# st <- subset(st, metro_only == 0)
+
 
 # keep only municipalities that were eventually treated
 st <- st[passe_livre_2==1, ]
@@ -377,6 +380,7 @@ values <- lapply(c(output_urban$ymax, output_urban$ymin,
                    output_edu$ymax, output_edu$ymin,
                    output_dens$ymax, output_dens$ymin), FUN = base::abs)
 values <- unlist(values)
+max_y <- max(values)
 max_y <- ifelse(max_y < 0.05, 0.05, max_y)
 min_y <- -1*max_y
 
