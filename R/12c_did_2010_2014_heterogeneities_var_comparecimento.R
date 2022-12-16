@@ -385,7 +385,7 @@ max_y <- ifelse(max_y < 0.05, 0.05, max_y)
 min_y <- -1*max_y
 
 
-default_theme <- list( ylim(c(min_y, max_y)) ,
+default_theme <- list(  scale_y_continuous(limits = c(min_y, max_y), labels = scales::percent),
                        scale_color_jama() ,
                        theme_classic() ,
                        theme(text = element_text(size=9))
@@ -413,16 +413,17 @@ fig_urban_var <-
 fig_edu_var <- 
  ggplot(data = output_edu, aes(x= edu_cat, y=coef, color=Weighted)) +
  geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
- geom_point(color='#d6a525') +
- geom_pointrange(color='#d6a525',
+ geom_pointrange(size=.2,
+                 color='#d6a525',
                  aes(x=edu_cat, y=coef,
                      ymin = ymin,
                      ymax = ymax)) +
- labs(y='', x= 'Deciles of education') +
+ labs(y='', x= 'Deciles of\neducation attainment\nof polling stations') +
  scale_x_continuous(breaks = 1:10) +
  default_theme + 
  scale_color_jama(guide = guide_legend()) +
  theme(legend.position="bottom")
+
 
 
 
@@ -432,14 +433,21 @@ fig_dens_var <-
  geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
  # geom_line(color='#B24745FF') +
  # geom_ribbon(fill='#B24745FF', aes(ymax=coef + 1.96*se, ymin=coef - 1.96*se), alpha=.2) +
- geom_point(color='#B24745FF') +
- geom_pointrange(color='#B24745FF',
+ geom_pointrange(size=.2,
+                 color='#B24745FF',
                  aes(ymin = ymin,
                      ymax = ymax)) +
  labs(y='', x='Deciles of density\nof polling stations') +
  scale_x_continuous(breaks = 1:10) +
  default_theme + 
  theme(legend.position="none")
+
+
+fig_edu_var
+fig_dens_var
+
+saveRDS(fig_edu_var, file='./figures/fig_1C.rds')
+saveRDS(fig_dens_var, file='./figures/fig_1D.rds')
 
 
 

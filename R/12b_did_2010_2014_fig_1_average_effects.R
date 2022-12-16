@@ -189,18 +189,16 @@ fig_b <-
  theme(legend.position="none")
 
 
-# Figure C
+# Figure a
 fig_a <- 
  ggplot(data = output_b, aes(x= year, y=coef, color=Weighted)) +
  geom_vline(xintercept = 2018, color='gray80', linetype = 'dashed') +
  geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
- geom_point(position = position_dodge2(width = 1)) +
- geom_pointrange(position = position_dodge2(width = 1),
-                 aes(x=year, y=coef,
+ geom_pointrange(aes(x=year, y=coef,
                      ymin = ymin,
                      ymax = ymax)) +
  scale_x_continuous(breaks = c(2010, 2014, 2018, 2022)) +
- labs(y='', x = 'Year') +
+ labs(y='Estimate and 95% Conf. Int.', x = 'Year') +
  ylim(c(min_y, max_y)) +
  default_theme + 
  scale_color_jama(guide = guide_legend()) +
@@ -255,23 +253,25 @@ min_y <- -1*max_y
 
 
 # Figure a
-fig_a <- 
+fig_1a <- 
  ggplot(data = output_b, aes(x= year, y=coef)) +
  annotate("rect", fill='gray95', xmin = 2021, xmax = 2023, 
           ymin = -Inf, ymax = Inf) +
  # geom_vline(xintercept = 2018, color='gray80', linetype = 'dashed') +
  geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
- geom_point(color='#0e8bb1') +
- geom_pointrange(color='#0e8bb1',
+ geom_pointrange(size=.2, color='#0e8bb1',
                  aes(x=year, y=coef,
                      ymin = ymin,
                      ymax = ymax)) +
  scale_x_continuous(breaks = c(2010, 2014, 2018, 2022)) +
- labs(y='', x = 'Year') +
- ylim(c(min_y, max_y)) +
+ labs(y='Estimate and 95% Conf. Int.', x = 'Year') +
+ scale_y_continuous(limits = c(min_y, max_y), labels = scales::percent) +
  default_theme + 
  scale_color_jama(guide = guide_legend()) +
  theme(legend.position="bottom")
+
+fig_1a
+saveRDS(fig_1a, file='./figures/fig_1A.rds')
 
 
 

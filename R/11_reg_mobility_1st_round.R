@@ -1,3 +1,4 @@
+library(grid)
 library(ggsci)
 library(ggplot2)
 library(stringr)
@@ -45,8 +46,8 @@ table(google1$passe_2, useNA = 'always')
 # 1o turno:  2 de outubro de 2022
 # 2o turno: 30 de outubro de 2022
 sundays <- c(
-             "2022-08-14",
-             "2022-08-21",
+             # "2022-08-14",
+             # "2022-08-21",
              "2022-08-28",
              "2022-09-04",
              "2022-09-11",
@@ -245,67 +246,95 @@ temp_df$activity <- stringr::str_replace(temp_df$activity, "_", " " )
 temp_df$activity <- stringr::str_replace(temp_df$activity, "and", "&" )
 temp_df$activity <- sub('^(\\w?)', '\\U\\1', temp_df$activity, perl=T)
 
+
+# drop workplace
+temp_df <- subset(temp_df, activity != 'Workplaces' )
+# temp_df <- subset(temp_df, activity != 'Workplaces' )
+
+
+# MUDAR ORDEM 6666666
+temp_df$activity <- factor(temp_df$activity,
+                levels = c( "Transit stations", "Parks", "Grocery & pharmacy", 
+                            "Retail & recreation", "Residential"))
+
+
+
 fig_all_reg <- 
 ggplot(data = temp_df, aes(x= date, y=coef, color=activity)) +
  annotate("rect", fill='gray95', xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
           ymin = min(temp_df$temp_df, na.rm=T), ymax = max(temp_df$temp_df, na.rm=T)) +
- scale_x_date( date_labels =  "%d %b", breaks =  sundays[c(1,5,8)] ) +
+ scale_y_continuous( limits = c(min_y, max_y), breaks = c(-20, 0, 20), labels = c("-20%", "0%", "20%")) +
+ scale_x_date( date_labels =  "%d %b", breaks =  sundays[c(1,6)] ) +
  labs(y='Estimate and 95% Conf. Int.', x = 'Sundays') +
- geom_vline(xintercept = as.Date("2022-09-25"), color='gray80', linetype = 'dashed') +
+ # geom_vline(xintercept = as.Date("2022-09-25"), color='gray80', linetype = 'dashed') +
  geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
- geom_point(position = position_dodge2(width = 2)) +
- geom_pointrange(position = position_dodge2(width = 2),
+ # geom_point(size=.4) +
+ geom_pointrange(size=.2,
                  aes(x=date, y=coef,
                      ymin = ymin,
                      ymax = ymax)) +
- ylim(c(min_y, max_y)) +
- facet_wrap(~activity) +
+ facet_wrap(~activity, ncol = 5) +
  theme_classic() +
- theme(legend.position="none") +
+ theme(legend.position="none", 
+       panel.spacing = unit(1.1, "lines"),
+       strip.background = element_blank()) +
  scale_color_npg()
+
+
 
 
 fig_all_reg
 
-ggsave(fig_all_reg, file='./figures/si_1_mobility_all.pdf', 
-       width = 15, height = 12, units='cm', dpi = 300)
+ggsave(fig_all_reg, file='./figures/fig_2_mobility.pdf', 
+       width = 21, height = 7, units='cm', dpi = 300)
+
+
+
 
 temp_df[ date=='2022-10-02' & p_value < 0.05]
 
-
-# plot TRANSIT  reg ----------------------------------------------------------------
-
-
-temp_df <- subset(reg_output_df, activity %like% 'transit')
-
-# get max and min y values
-max_y <- max(c(abs(temp_df$ymin), temp_df$ymax))
-min_y <- -1*max_y
-
-
-fig_t <- 
- ggplot(data = temp_df, aes(x= date, y=coef, color=activity)) +
- annotate("rect", fill='gray95', xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
-          ymin = min(temp_df$temp_df, na.rm=T), ymax = max(temp_df$temp_df, na.rm=T)) +
- scale_x_date( date_labels =  "%d %b", breaks =  sundays[c(1,5,8)] ) +
- labs(y='Estimate and 95% Conf. Int.', x = 'Sundays') +
- geom_vline(xintercept = as.Date("2022-09-25"), color='gray80', linetype = 'dashed') +
- geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
- geom_point(color='#B24745FF') +
- geom_pointrange(color='#B24745FF',
-                 aes(x=date, y=coef,
-                     ymin = ymin,
-                     ymax = ymax)) +
- ylim(c(min_y, max_y)) +
- theme_classic() +
- theme(text = element_text(size=9),
-       legend.position="none") # + scale_color_npg()
-
-
-fig_t
-
-saveRDS(fig_t,file='./figures/fig_1A.rds')
+temp_df[ date=='2022-10-02']
 
 
 
 
+# 
+# 
+# 
+# 
+# # plot TRANSIT  reg ----------------------------------------------------------------
+# 
+# 
+# temp_df <- subset(reg_output_df, activity %like% 'transit')
+# 
+# # get max and min y values
+# max_y <- max(c(abs(temp_df$ymin), temp_df$ymax))
+# min_y <- -1*max_y
+# 
+# 
+# fig_t <- 
+#  ggplot(data = temp_df, aes(x= date, y=coef, color=activity)) +
+#  annotate("rect", fill='gray95', xmin = as.Date("2022-09-30"), xmax = as.Date("2022-10-04"), 
+#           ymin = min(temp_df$temp_df, na.rm=T), ymax = max(temp_df$temp_df, na.rm=T)) +
+#  scale_x_date( date_labels =  "%d %b", breaks =  sundays[c(1,5,8)] ) +
+#  labs(y='Estimate and 95% Conf. Int.', x = 'Sundays') +
+#  geom_vline(xintercept = as.Date("2022-09-25"), color='gray80', linetype = 'dashed') +
+#  geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
+#  geom_point(color='#B24745FF') +
+#  geom_pointrange(color='#B24745FF',
+#                  aes(x=date, y=coef,
+#                      ymin = ymin,
+#                      ymax = ymax)) +
+#  ylim(c(min_y, max_y)) +
+#  theme_classic() +
+#  theme(text = element_text(size=9),
+#        legend.position="none") # + scale_color_npg()
+# 
+# 
+# fig_t
+# 
+# saveRDS(fig_t,file='./figures/fig_1A.rds')
+# 
+# 
+# 
+# 
