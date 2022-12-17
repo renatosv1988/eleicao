@@ -357,12 +357,12 @@ p_var
 
  
 
-##### save plot
-
-ggsave(plot=p_var, file= './figures/fig_2_heterogeneity_var_ipw.pdf', 
-       width = 17.8, height = 8, units='cm', dpi = 300)
-
-
+# ##### save plot
+# 
+# ggsave(plot=p_var, file= './figures/fig_2_heterogeneity_var_ipw.pdf', 
+#        width = 17.8, height = 8, units='cm', dpi = 300)
+# 
+# 
 
 
 
@@ -473,9 +473,9 @@ p_var
 
 
 
-##### save plot
-
-ggsave(plot=p_var, file= './figures/fig_2_heterogeneity_var.pdf', 
-       width = 17.8, height = 8, units='cm', dpi = 300)
+# ##### save plot
+# 
+# ggsave(plot=p_var, file= './figures/fig_2_heterogeneity_var.pdf', 
+#        width = 17.8, height = 8, units='cm', dpi = 300)
 
 

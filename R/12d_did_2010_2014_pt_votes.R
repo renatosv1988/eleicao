@@ -119,13 +119,13 @@ fig_ipw <-
 fig_ipw
 
 
-##### save plot
-
-ggsave(plot=fig_ipw, file= './figures/si_1_avg_effects_on_pt_vote_ipw.pdf', 
-       width = 8.7, height = 7, units='cm', dpi = 300)
-
-
-
+# ##### save plot
+# 
+# ggsave(plot=fig_ipw, file= './figures/si_1_avg_effects_on_pt_vote_ipw.pdf', 
+#        width = 8.7, height = 7, units='cm', dpi = 300)
+# 
+# 
+# 
 
 
 
@@ -170,14 +170,15 @@ fig_1b <-
 
 
 fig_1b
-saveRDS(fig_1b,file='./figures/fig_1B.rds')
 
 
- 
+
+
 
 ##### save plot
 
 
-ggsave(plot=fig, file= './figures/si_1_avg_effects_on_pt_vote.pdf', 
-       width = 8.7, height = 7, units='cm', dpi = 300)
+saveRDS(fig_1b,file='./figures/fig_1B.rds')
 
+
+ 

@@ -208,11 +208,9 @@ fig_a <-
 
 
 
-# fig_t
-fig_t <- readRDS(file='./figures/fig_1A.rds')
 
 
-p <- fig_a + fig_b +  fig_t +
+p <- fig_a + fig_b +  
      plot_annotation(tag_levels = 'A') +
      plot_layout(ncol = 3)
 
@@ -220,11 +218,11 @@ p
 
 
 
-##### save plot --------------------------------------------------------------------
-
-
-ggsave(plot=p, file= './figures/fig_1_avg_effects_ipw.pdf', 
-       width = 17.8, height = 8, units='cm', dpi = 300)
+# ##### save plot --------------------------------------------------------------------
+# 
+# 
+# ggsave(plot=p, file= './figures/fig_avg_effects_ipw.pdf', 
+#        width = 17.8, height = 8, units='cm', dpi = 300)
 
 
 
@@ -299,21 +297,21 @@ fig_b <-
 
 
 
-# fig_t
-fig_t <- readRDS(file='./figures/fig_1A.rds')
-
-
-p2 <- fig_a + fig_b + fig_t +
- plot_annotation(tag_levels = 'A') +
- plot_layout(ncol = 3)
-
-p2
-
-
-
-##### save plot --------------------------------------------------------------------
-
-
-ggsave(plot=p2, file= './figures/fig_1_avg_effects.pdf', 
-       width = 17.8, height = 8, units='cm', dpi = 300)
+# # fig_t
+# fig_t <- readRDS(file='./figures/fig_1A.rds')
+# 
+# 
+# p2 <- fig_a + fig_b + fig_t +
+#  plot_annotation(tag_levels = 'A') +
+#  plot_layout(ncol = 3)
+# 
+# p2
+# 
+# 
+# 
+# ##### save plot --------------------------------------------------------------------
+# 
+# 
+# ggsave(plot=p2, file= './figures/fig_1_avg_effects.pdf', 
+#        width = 17.8, height = 8, units='cm', dpi = 300)
 

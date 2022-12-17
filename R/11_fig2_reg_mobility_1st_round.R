@@ -252,11 +252,10 @@ temp_df <- subset(temp_df, activity != 'Workplaces' )
 # temp_df <- subset(temp_df, activity != 'Workplaces' )
 
 
-# MUDAR ORDEM 6666666
+# MUDAR ORDEM
 temp_df$activity <- factor(temp_df$activity,
                 levels = c( "Transit stations", "Parks", "Grocery & pharmacy", 
                             "Retail & recreation", "Residential"))
-
 
 
 fig_all_reg <- 
