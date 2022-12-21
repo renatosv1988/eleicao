@@ -6,11 +6,11 @@ library(stringr)
 
 
 # read passe livre
-passe_livre <- read_excel("../../data_raw/passe_livre/Passe Livre nas Eleições.xlsx", range = "B3:N397")
+passe_livre <- read_excel("../../data_raw/passe_livre/Passe.Livre.nas.Eleicoes.xlsx", range = "B3:N397")
 setDT(passe_livre)
 
 # municipios with passe livre all year
-passe_livre_sempre <- read_excel("../../data_raw/passe_livre/Passe Livre nas Eleições.xlsx", range = "B427:C480")
+passe_livre_sempre <- read_excel("../../data_raw/passe_livre/Passe.Livre.nas.Eleicoes.xlsx", range = "B427:C480")
 setDT(passe_livre_sempre)
 setnames(passe_livre_sempre, 'Estado', 'UF')
 

@@ -406,3 +406,41 @@ dir.create(dir_spatial)
 # download data
 download.file("https://storage.googleapis.com/capyvara_public/tse/geocoded_voting_places_001.csv",
               destfile = paste0(dir_spatial, "/geocoded_voting_places_001.csv"))
+
+
+
+
+# other data raw files  -------------------------------------------------------------
+
+# correspondence table of municipalties ids
+br_bd_diretorios_brasil_municipio <- fread('https://github.com/renatosv1988/eleicao/releases/download/v0.1.0/br_bd_diretorios_brasil_municipio.csv', encoding = 'UTF-8')
+fwrite(br_bd_diretorios_brasil_municipio, '../../data_raw/br_bd_diretorios_brasil_municipio.csv')
+
+dir.create('../../data_raw/tse_ibge/')
+correspondencia_IBGE_TSE <- fread('https://github.com/renatosv1988/eleicao/releases/download/v0.1.0/correspondencia_IBGE_TSE.csv', encoding = 'UTF-8')
+fwrite(correspondencia_IBGE_TSE, '../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv')
+
+
+# geocoding results
+dir.create('../../data_raw/spatial/')
+geocoded_voting_places_001 <- fread('https://github.com/renatosv1988/eleicao/releases/download/v0.1.0/geocoded_voting_places_001.csv', encoding = 'UTF-8')
+fwrite(geocoded_voting_places_001, '../../data_raw/spatial/geocoded_voting_places_001.csv')
+
+geolocal_11out <- fread('https://github.com/renatosv1988/eleicao/releases/download/v0.1.0/geolocal_11out.csv', encoding = 'UTF-8')
+fwrite(geolocal_11out, '../../data_raw/spatial/geolocal_11out.csv')
+
+
+# GDP data
+dir.create('../../data_raw/IBGE/')
+PIBPC_2019_municipios <- fread('https://github.com/renatosv1988/eleicao/releases/download/v0.1.0/PIBPC_2019_municipios.csv', encoding = 'UTF-8')
+fwrite(PIBPC_2019_municipios, '../../data_raw/IBGE/PIBPC_2019_municipios.csv')
+
+
+# fare-free policy data
+dir.create('../../data_raw/passe_livre/')
+passe_livre_url <- 'https://github.com/renatosv1988/eleicao/releases/download/v0.1.0/Passe.Livre.nas.Eleicoes.xlsx'
+httr::GET(url=passe_livre_url,
+          httr::write_disk('../../data_raw/passe_livre/Passe.Livre.nas.Eleicoes.xlsx', overwrite = T))
+
+
+

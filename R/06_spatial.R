@@ -491,11 +491,14 @@ df_sections <- fread('../../data/spatial/electoral_sections_spatial.csv')
 
 # correspondence table of municipality codes
 rosetta <-  fread('../../data_raw/br_bd_diretorios_brasil_municipio.csv', encoding = "UTF-8")
+#rosetta <-  fread('../../data_raw/tse_ibge/correspondencia_IBGE_TSE.csv', encoding = "UTF-8")
 head(rosetta)
+
 
 
 # # bring IBGE code_muni
 df_sections[rosetta, on = c('CD_MUNICIPIO'='id_municipio_tse'), code_muni := i.id_municipio]
+# df_sections[rosetta, on = c('CD_MUNICIPIO'='codigo_tse'), code_muni2 := i.codigo_ibge]
 head(df_sections)
 summary(df_sections)
 
