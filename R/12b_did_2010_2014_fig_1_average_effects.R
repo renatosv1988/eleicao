@@ -12,8 +12,13 @@ options(scipen = 999)
 # read data ----------------------------------------------------------------------
 
 df <- fread("../../data/base_DiD2010_2022_secoes.csv", encoding = "Latin-1")
-
 muni_ipw <- fread("../../data/ipw_municipalities.csv", encoding = "Latin-1")
+
+
+# TOTAL number of polling stations in Brazil
+df2022 <- subset(df, ANO_ELEICAO==2022)
+unique(df2022$id_secao) |> length()
+#> 470467
 
 
 # add ipw to electoral sections
@@ -90,7 +95,17 @@ st[, year := as.character(ANO_ELEICAO)]
  # metro only 6666666666666666
  # st <- subset(st, metro_only == 0)
  
-  
+
+# number of polling stations analyzed
+e2022 <- subset(st, ANO_ELEICAO==2022)
+unique(e2022$id_secao) |> length()
+#> 209725
+
+# share of polling stations
+#> 209725/470467 (44.6%)
+
+
+
 # A) Turnout in 1st round -----------------------------------------
 
 m1_a = feols(comparecimento_t1 ~ i(year, pl1, "2018") | id_secao+year, 
@@ -250,7 +265,8 @@ min_y <- -1*max_y
 
 
 
-# Figure a
+# Figure 1a EN ------------------ 
+
 fig_1a <- 
  ggplot(data = output_b, aes(x= year, y=coef)) +
  annotate("rect", fill='gray95', xmin = 2021, xmax = 2023, 
@@ -273,28 +289,53 @@ saveRDS(fig_1a, file='./figures/fig_1A.rds')
 
 
 
-# Figure b
-fig_b <- 
- ggplot() +
- # geom_vline(xintercept = 2018, color='gray80', linetype = 'dashed') +
+
+
+# Figure 1a EN ------------------ 
+
+fig_1a <- 
+ ggplot(data = output_b, aes(x= year, y=coef)) +
  annotate("rect", fill='gray95', xmin = 2021, xmax = 2023, 
           ymin = -Inf, ymax = Inf) +
+ # geom_vline(xintercept = 2018, color='gray80', linetype = 'dashed') +
  geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
- geom_point(data = output_a, aes(x= year, y=coef), color='#0e8bb1') +
- geom_pointrange(data = output_a,  color='#0e8bb1',
+ geom_pointrange(size=.2, color='#0e8bb1',
                  aes(x=year, y=coef,
                      ymin = ymin,
                      ymax = ymax)) +
  scale_x_continuous(breaks = c(2010, 2014, 2018, 2022)) +
  labs(y='Estimate and 95% Conf. Int.', x = 'Year') +
- ylim(c(min_y, max_y)) +
+ scale_y_continuous(limits = c(min_y, max_y), labels = scales::percent) +
  default_theme + 
- theme(legend.position="none")
+ scale_color_jama(guide = guide_legend()) +
+ theme(legend.position="bottom")
 
+fig_1a
+saveRDS(fig_1a, file='./figures/fig_1A.rds')
 
-
-
-
+# 
+# # Figure b
+# fig_b <- 
+#  ggplot() +
+#  # geom_vline(xintercept = 2018, color='gray80', linetype = 'dashed') +
+#  annotate("rect", fill='gray95', xmin = 2021, xmax = 2023, 
+#           ymin = -Inf, ymax = Inf) +
+#  geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
+#  geom_point(data = output_a, aes(x= year, y=coef), color='#0e8bb1') +
+#  geom_pointrange(data = output_a,  color='#0e8bb1',
+#                  aes(x=year, y=coef,
+#                      ymin = ymin,
+#                      ymax = ymax)) +
+#  scale_x_continuous(breaks = c(2010, 2014, 2018, 2022)) +
+#  labs(y='Estimate and 95% Conf. Int.', x = 'Year') +
+#  ylim(c(min_y, max_y)) +
+#  default_theme + 
+#  theme(legend.position="none")
+# 
+# 
+# 
+# 
+# 
 
 
 # # fig_t

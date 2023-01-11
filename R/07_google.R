@@ -138,6 +138,11 @@ passe <- fread('../../data/passe_livre/passe_livre.csv', encoding = 'UTF-8')
 head(passe)
 head(passe$city_uf_ID)
 
+
+# Number of municipalities with passe livre
+passe[is.na(passe_livre_always) & (passe_livre_t1==1 | passe_livre_t2 == 1)] |> nrow()
+#> 379
+
 passe[, table(passe_livre_t1, passe_livre_t2)]
 #>                passe_livre_t2
 #> passe_livre_t1   1
