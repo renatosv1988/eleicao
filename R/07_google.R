@@ -202,3 +202,60 @@ fwrite(google1, file = '../../data/google/google.csv')
 
 
 
+
+
+#### descriptive ------------------------------------------------
+
+df <- fread(file = '../../data/google/google.csv')
+
+# muni estimates
+google1 <- subset(df, name_muni != "NA - NA")
+google1 <- subset(google1, !is.na(sub_region_2))
+
+# only transit
+google1 <- subset(google1, variable  %like% 'transit')
+
+# excluir cidades que SEMPRE tiveram passe livre
+google1 <- subset(google1, is.na(passe_livre_always))
+
+
+# keep only data on Sundays close to the election dates
+  # 1o turno:  2 de outubro de 2022
+  # 2o turno: 30 de outubro de 2022
+  sundays <- c(
+               # "2020-11-01",
+               # "2020-11-08",
+               # "2020-11-15",
+               # "2020-11-22",
+               # "2020-11-29",
+               # "2022-08-07",
+               # "2022-08-14",
+               # "2022-08-21",
+               "2022-08-28",
+               "2022-09-04",
+               "2022-09-11",
+               "2022-09-18",
+               "2022-09-25",
+               "2022-10-02")
+  
+ google1 <- subset(google1, date %in% as.IDate(sundays))
+
+ # keep only municipalities that were eventually treated
+ google1 <- google1[passe_2==1, ]
+ 
+ 
+ # periods before, 1st and 2nd round
+ google1[, period := fifelse(date == as.IDate("2022-10-02"), '1st round', 'Before')]
+ table(google1$period, google1$date)
+
+ 
+ google1[, .(mob = mean(value, na.rm=T), count = .N), by = .(period, passe_1)]
+ 
+ 
+ 1:    Before       0 -8.438471  1264
+ 2: 1st round       0  0.313253   251
+ 
+ 5:    Before       1  6.354430   357
+ 6: 1st round       1 25.209677    71
+ 
+
