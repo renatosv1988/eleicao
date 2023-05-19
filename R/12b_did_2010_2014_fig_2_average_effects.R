@@ -180,7 +180,8 @@ min_y <- -1*max_y
 
 default_theme <- list( scale_color_jama() ,
                        theme_classic() ,
-                       theme(text = element_text(size=9))
+                       theme(text = element_text(size=9),
+                             plot.title = element_text(hjust=0.5))
                        )
 
 
@@ -205,23 +206,41 @@ fig_b <-
 
 
 # Figure a
-fig_a <- 
- ggplot(data = output_b, aes(x= year, y=coef, color=Weighted)) +
+#fig_a <- 
+# ggplot(data = output_b, aes(x= year, y=coef, color=Weighted)) +
+# geom_vline(xintercept = 2018, color='gray80', linetype = 'dashed') +
+# geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
+# geom_pointrange(aes(x=year, y=coef,
+#                     ymin = ymin,
+#                     ymax = ymax)) +
+# scale_x_continuous(breaks = c(2010, 2014, 2018, 2022)) +
+# labs(y='Estimate and 95% Conf. Int.', x = 'Year') +
+# ylim(c(min_y, max_y)) +
+# default_theme + 
+# scale_color_jama(guide = guide_legend()) +
+# theme(legend.position="bottom")
+
+fig_b <- 
+ ggplot() +
  geom_vline(xintercept = 2018, color='gray80', linetype = 'dashed') +
  geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
- geom_pointrange(aes(x=year, y=coef,
+ geom_point(data = output_b, aes(x= year, y=coef, color=Weighted),
+            position = position_dodge2(width = 1), size=0.25) +
+ geom_pointrange(data = output_b,
+                 position = position_dodge2(width = 1),
+                 aes(x=year, y=coef, color=Weighted,
                      ymin = ymin,
                      ymax = ymax)) +
  scale_x_continuous(breaks = c(2010, 2014, 2018, 2022)) +
- labs(y='Estimate and 95% Conf. Int.', x = 'Year') +
+ labs(y='Estimate and 95% Conf. Int.', x = 'Year',
+      title = "turnout") +
  ylim(c(min_y, max_y)) +
  default_theme + 
- scale_color_jama(guide = guide_legend()) +
- theme(legend.position="bottom")
-
-
-
-
+ theme(legend.position="bottom") +
+ scale_color_jama(labels = c("No"="None","Yes"="IPW"),
+                  name = "Weights")
+fig_b
+saveRDS(fig_b, file='./figures2/fig_2A.rds')
 
 
 

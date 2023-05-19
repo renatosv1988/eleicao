@@ -96,6 +96,24 @@ st[, zone := fcase(zone=='urban', 'Urban',
                    default = NA)]
 
 
+# turnout quantiles
+sth <- st[year==2022,c("id_secao","comparecimento_t1")]
+colnames(sth) <- c("id_secao","comparecimento_hist")
+st <- merge(st, sth, by="id_secao", all.x = T)
+
+st[,summary(comparecimento_hist)]
+st[,summary(idade_60M)]
+st[,summary(educacao_1)]
+
+st[, comparecimento_hist_decile := cut(comparecimento_hist,
+                             breaks = quantile(comparecimento_hist, na.rm=T,
+                                               probs = seq(0, 1 , by = .1)),
+                             include.lowest = TRUE,
+                             ordered_result = TRUE,
+                             labels = 1:10) ,   by = code_muni]
+
+
+st[, mean(comparecimento_hist, na.rm=T), by=comparecimento_hist_decile][order(V1)]
 
 
 
@@ -268,6 +286,47 @@ output_age <- purrr::map(.x = levels(st$idade_60M_decile),
                          .f = reg_age) |> rbindlist()
 
 
+# by turnout  ------------------------------------------
+
+
+reg_tur <- function(e){  # e = '(0.252,0.309]'
+ 
+ # select group
+ temp_df_section <- st[ comparecimento_hist_decile == e, ]
+ 
+ # step 2 regression
+ m1 = feols(variacao_comparecimento ~ i(year, pl1, "2018") | id_secao+year,
+            cluster = 'code_muni',
+            data = temp_df_section)
+ 
+ m2 = feols(variacao_comparecimento ~ i(year, pl1, "2018") | id_secao+year,
+            cluster = 'code_muni',
+            weights = ~ipw2,
+            data = temp_df_section)
+ 
+ 
+ output_m1 <- data.frame(Weighted = 'No',
+                         tur_cat = e,
+                         coef = m1$coeftable[1, 1],
+                         se = m1$coeftable[1, 2])
+ 
+ output_m2 <- data.frame(Weighted = 'Yes',
+                         tur_cat = e,
+                         coef = m2$coeftable[1, 1],
+                         se = m2$coeftable[1, 2])
+ 
+ output <- rbind(output_m1, output_m2)
+ setDT(output)
+ output[, ymin := coef - 1.96*se]
+ output[, ymax := coef + 1.96*se]
+ return(output)
+}
+
+
+output_tur <- purrr::map(.x = levels(st$comparecimento_hist_decile),
+                         .f = reg_tur) |> rbindlist()
+
+
 
 
 
@@ -276,7 +335,10 @@ output_age <- purrr::map(.x = levels(st$idade_60M_decile),
 # get max and min y values
 values <- lapply(c(output_urban$ymax, output_urban$ymin, 
                    output_edu$ymax, output_edu$ymin,
-                   output_dens$ymax, output_dens$ymin), FUN = base::abs)
+                   output_dens$ymax, output_dens$ymin,
+                   output_age$ymax, output_age$ymin,
+                   output_tur$ymax, output_tur$ymin),
+                 FUN = base::abs)
 values <- unlist(values)
 max_y <- max(values)
 min_y <- -1*max_y
@@ -285,7 +347,9 @@ min_y <- -1*max_y
 default_theme <- list( ylim(c(min_y, max_y)) ,
                        scale_color_jama() ,
                        theme_classic() ,
-                       theme(text = element_text(size=9))
+                       theme(text = element_text(size=9),
+                             
+                             plot.title = element_text(hjust=0.5))
                        )
 
 # urban
@@ -373,12 +437,16 @@ p_var
 output_urban <- subset(output_urban, Weighted == 'No')
 output_edu <- subset(output_edu, Weighted == 'No')
 output_dens <- subset(output_dens, Weighted == 'No')
+output_age <- subset(output_age, Weighted == 'No')
+output_tur <- subset(output_tur, Weighted == 'No')
 
 
 # get max and min y values
 values <- lapply(c(output_urban$ymax, output_urban$ymin, 
                    output_edu$ymax, output_edu$ymin,
-                   output_dens$ymax, output_dens$ymin), FUN = base::abs)
+                   output_dens$ymax, output_dens$ymin,
+                   output_age$ymax, output_age$ymin,
+                   output_tur$ymax, output_tur$ymin), FUN = base::abs)
 values <- unlist(values)
 max_y <- max(values)
 max_y <- ifelse(max_y < 0.05, 0.05, max_y)
@@ -388,7 +456,8 @@ min_y <- -1*max_y
 default_theme <- list(  scale_y_continuous(limits = c(min_y, max_y), labels = scales::percent),
                        scale_color_jama() ,
                        theme_classic() ,
-                       theme(text = element_text(size=9))
+                       theme(text = element_text(size=9),
+                             plot.title = element_text(hjust=0.5))
 )
 
 # urban
@@ -418,7 +487,8 @@ fig_edu_var <-
                  aes(x=edu_cat, y=coef,
                      ymin = ymin,
                      ymax = ymax)) +
- labs(y='', x= 'Deciles of\neducation attainment\nof polling stations') +
+ labs(y='', x= 'Deciles of\neducation attainment\nof polling stations',
+      title="educational attainment") +
  scale_x_continuous(breaks = 1:10) +
  default_theme + 
  scale_color_jama(guide = guide_legend()) +
@@ -437,7 +507,39 @@ fig_dens_var <-
                  color='#B24745FF',
                  aes(ymin = ymin,
                      ymax = ymax)) +
- labs(y='', x='Deciles of density\nof polling stations') +
+ labs(y='', x='Deciles of density\nof polling stations', title="urban density") +
+ scale_x_continuous(breaks = 1:10) +
+ default_theme + 
+ theme(legend.position="none")
+
+
+# age
+fig_age_var <- 
+ ggplot(data = output_age, aes(x= as.numeric(age_cat), y=coef)) +
+ geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
+ # geom_line(color='#B24745FF') +
+ # geom_ribbon(fill='#B24745FF', aes(ymax=coef + 1.96*se, ymin=coef - 1.96*se), alpha=.2) +
+ geom_pointrange(size=.2,
+                 color='forestgreen',
+                 aes(ymin = ymin,
+                     ymax = ymax)) +
+ labs(y='', x='Deciles of age\nby polling stations', title="voter's age") +
+ scale_x_continuous(breaks = 1:10) +
+ default_theme + 
+ theme(legend.position="none")
+
+
+# turnout
+fig_tur_var <- 
+ ggplot(data = output_tur, aes(x= as.numeric(tur_cat), y=coef)) +
+ geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
+ # geom_line(color='#B24745FF') +
+ # geom_ribbon(fill='#B24745FF', aes(ymax=coef + 1.96*se, ymin=coef - 1.96*se), alpha=.2) +
+ geom_pointrange(size=.2,
+                 color='navy',
+                 aes(ymin = ymin,
+                     ymax = ymax)) +
+ labs(y='', x='Deciles of historical turnout\nby polling stations', title="historical turnout") +
  scale_x_continuous(breaks = 1:10) +
  default_theme + 
  theme(legend.position="none")
@@ -445,9 +547,14 @@ fig_dens_var <-
 
 fig_edu_var
 fig_dens_var
+fig_age_var
+fig_tur_var
 
-saveRDS(fig_edu_var, file='./figures/fig_1C.rds')
-saveRDS(fig_dens_var, file='./figures/fig_1D.rds')
+
+saveRDS(fig_edu_var, file='./figures2/fig_3A.rds')
+saveRDS(fig_dens_var, file='./figures2/fig_3B.rds')
+saveRDS(fig_age_var, file='./figures2/fig_3C.rds')
+saveRDS(fig_tur_var, file='./figures2/fig_3D.rds')
 
 
 

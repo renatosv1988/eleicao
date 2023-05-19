@@ -92,7 +92,8 @@ min_y <- -1*max_y
 
 
 default_theme <- list( theme_classic() ,
-                       theme(text = element_text(size=9))
+                       theme(text = element_text(size=9),
+                             plot.title = element_text(hjust=0.5))
                        )
 
 
@@ -102,18 +103,20 @@ fig_ipw <-
  ggplot(data = output_b, aes(x= year, y=coef, color=Weighted)) +
  geom_vline(xintercept = 2018, color='gray80', linetype = 'dashed') +
  geom_hline(yintercept = 0, color='gray80', linetype = 'dashed') +
- geom_point(position = position_dodge2(width = 1)) +
+ geom_point(position = position_dodge2(width = 1), size=0.25) +
  geom_pointrange(position = position_dodge2(width = 1),
                  aes(x=year, y=coef,
                      ymin = ymin,
                      ymax = ymax)) +
  scale_x_continuous(breaks = c(2010, 2014, 2018, 2022)) +
- labs(y='', x = 'Year') +
+ labs(y='', x = 'Year', title = "PT vote share") +
  ylim(c(min_y, max_y)) +
  default_theme + 
- scale_color_manual(values=c('#0e8bb1', '#df8f45'), guide = guide_legend()) +
+ scale_color_manual(values=c('#0e8bb1', '#df8f45'), guide = guide_legend(),
+                    labels = c("No"="None","Yes"="IPW"),
+                    name = "Weights") +
  theme(legend.position="bottom")
-
+saveRDS(fig_ipw, file='./figures2/fig_2B.rds')
 
 
 fig_ipw
